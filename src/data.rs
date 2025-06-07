@@ -1,8 +1,8 @@
 // src/data.rs
 use anyhow::Result;
+use rand::Rng;
 use serde::{Deserialize, Serialize};
 use std::fs;
-use rand::Rng;
 
 // Structs for rust_by_example_index.json
 #[derive(Debug, Deserialize, Serialize, Clone)]

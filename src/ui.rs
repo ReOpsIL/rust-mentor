@@ -1,13 +1,13 @@
 // src/ui.rs
+use crate::app::{App, AppState};
+use lazy_static::lazy_static;
 use ratatui::prelude::*;
 use ratatui::widgets::*;
-use crate::app::{App, AppState};
-use textwrap;
 use syntect::easy::HighlightLines;
-use syntect::highlighting::{ThemeSet, Style as SyntectStyle};
+use syntect::highlighting::ThemeSet;
 use syntect::parsing::SyntaxSet;
-use syntect::util::{as_24_bit_terminal_escaped, LinesWithEndings};
-use lazy_static::lazy_static;
+use syntect::util::LinesWithEndings;
+use textwrap;
 
 // Initialize syntect resources once
 lazy_static! {
@@ -20,9 +20,9 @@ pub fn render(frame: &mut Frame, app: &App) {
     let main_layout = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
-            Constraint::Length(3),  // Title bar
-            Constraint::Min(0),     // Main content
-            Constraint::Length(3)   // Status bar
+            Constraint::Length(3), // Title bar
+            Constraint::Min(0),    // Main content
+            Constraint::Length(3), // Status bar
         ])
         .split(frame.size());
 
@@ -46,7 +46,11 @@ pub fn render(frame: &mut Frame, app: &App) {
 pub fn render_welcome_view(frame: &mut Frame, app: &App, layout: &[Rect]) {
     // Render title bar
     let title = Paragraph::new("Rust AI Mentor v0.1.0")
-        .style(Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD))
+        .style(
+            Style::default()
+                .fg(Color::LightYellow)
+                .add_modifier(Modifier::BOLD),
+        )
         .block(Block::default().borders(Borders::BOTTOM));
     frame.render_widget(title, layout[0]);
 
@@ -54,12 +58,12 @@ pub fn render_welcome_view(frame: &mut Frame, app: &App, layout: &[Rect]) {
     let main_content_layout = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
-            Constraint::Percentage(20),  // Empty space above
-            Constraint::Length(2),       // Welcome text
-            Constraint::Length(1),       // Empty line
-            Constraint::Length(10),      // Level selection (1-10)
-            Constraint::Length(2),       // Prompt
-            Constraint::Percentage(20),  // Empty space below
+            Constraint::Percentage(20), // Empty space above
+            Constraint::Length(2),      // Welcome text
+            Constraint::Length(1),      // Empty line
+            Constraint::Length(10),     // Level selection (1-10)
+            Constraint::Length(2),      // Prompt
+            Constraint::Percentage(20), // Empty space below
         ])
         .split(layout[1]);
 
@@ -74,23 +78,22 @@ pub fn render_welcome_view(frame: &mut Frame, app: &App, layout: &[Rect]) {
     for level in 1..=10 {
         let line = if level == app.selected_level {
             // Selected level
-            Line::from(vec![
-                Span::styled(
-                    format!("> Level {}: {}", level, level_description(level)),
-                    Style::default().fg(Color::Black).bg(Color::Cyan)
-                )
-            ])
+            Line::from(vec![Span::styled(
+                format!("> Level {}: {}", level, level_description(level)),
+                Style::default().fg(Color::Black).bg(Color::LightYellow),
+            )])
         } else {
             // Unselected level
-            Line::from(vec![
-                Span::raw(format!("  Level {}: {}", level, level_description(level)))
-            ])
+            Line::from(vec![Span::raw(format!(
+                "  Level {}: {}",
+                level,
+                level_description(level)
+            ))])
         };
         level_lines.push(line);
     }
 
-    let levels = Paragraph::new(level_lines)
-        .alignment(Alignment::Center);
+    let levels = Paragraph::new(level_lines).alignment(Alignment::Center);
     frame.render_widget(levels, main_content_layout[3]);
 
     // Render prompt
@@ -108,6 +111,11 @@ pub fn render_welcome_view(frame: &mut Frame, app: &App, layout: &[Rect]) {
     let footer_line = Line::from(footer_spans);
     let status = Paragraph::new(footer_line)
         .alignment(Alignment::Center)
+        .style(
+            Style::default()
+                .fg(Color::LightYellow)
+                .add_modifier(Modifier::BOLD),
+        )
         .block(Block::default().borders(Borders::TOP));
     frame.render_widget(status, layout[2]);
 }
@@ -132,7 +140,11 @@ fn level_description(level: u8) -> &'static str {
 pub fn render_learning_view(frame: &mut Frame, app: &App, layout: &[Rect]) {
     // Render title bar
     let title = Paragraph::new(format!("Rust AI Mentor :: Level {}", app.selected_level))
-        .style(Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD))
+        .style(
+            Style::default()
+                .fg(Color::LightYellow)
+                .add_modifier(Modifier::BOLD),
+        )
         .block(Block::default().borders(Borders::BOTTOM));
     frame.render_widget(title, layout[0]);
 
@@ -142,18 +154,16 @@ pub fn render_learning_view(frame: &mut Frame, app: &App, layout: &[Rect]) {
         let mut content_lines = Vec::new();
 
         // Add topic header
-        content_lines.push(
-            Line::from(vec![
-                Span::styled(
-                    format!("## TOPIC: {}", module.topic),
-                    Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)
-                )
-            ])
-        );
+        content_lines.push(Line::from(vec![Span::styled(
+            format!("## TOPIC: {}", module.topic),
+            Style::default()
+                .fg(Color::LightYellow)
+                .add_modifier(Modifier::BOLD),
+        )]));
         content_lines.push(Line::from(""));
 
         // Add explanation text (split by newlines and wrap long lines)
-        for line in module.explanation.split('\n') {
+        for line in module.explanation.split("\\n") {
             // Wrap lines longer than 80 characters
             let wrapped_lines = textwrap::wrap(line, 80);
             for wrapped_line in wrapped_lines {
@@ -164,50 +174,46 @@ pub fn render_learning_view(frame: &mut Frame, app: &App, layout: &[Rect]) {
 
         // Add code snippets with syntax highlighting
         for (i, snippet) in module.code_snippets.iter().enumerate() {
-            content_lines.push(Line::from(vec![
-                Span::styled(
-                    format!("Code Example {}:", i + 1),
-                    Style::default().add_modifier(Modifier::BOLD)
-                )
-            ]));
+            content_lines.push(Line::from(vec![Span::styled(
+                format!("Code Example {}:", i + 1),
+                Style::default().add_modifier(Modifier::BOLD),
+            )]));
 
             // Add the code lines inside a block
             content_lines.push(Line::from(""));
 
             // Add a border line
-            content_lines.push(Line::from("┌─ Rust Code ───────────────────────────┐"));
+            content_lines.push(Line::from(
+                "┌─ Rust Code ─────────────────────────────────────────────────────────┐",
+            ));
 
             // Add the code lines with syntax highlighting using syntect
             // Get the Rust syntax reference
-            let syntax_ref = SYNTAX_SET.find_syntax_by_extension("rs").unwrap_or_else(|| {
-                SYNTAX_SET.find_syntax_by_name("Rust").unwrap_or_else(|| {
-                    SYNTAX_SET.find_syntax_plain_text()
-                })
-            });
+            let syntax_ref = SYNTAX_SET
+                .find_syntax_by_extension("rs")
+                .unwrap_or_else(|| {
+                    SYNTAX_SET
+                        .find_syntax_by_name("Rust")
+                        .unwrap_or_else(|| SYNTAX_SET.find_syntax_plain_text())
+                });
 
             // Create a new highlighter with the Rust syntax and a theme
-            let mut highlighter = HighlightLines::new(syntax_ref, &THEME_SET.themes["base16-ocean.dark"]);
+            let mut highlighter =
+                HighlightLines::new(syntax_ref, &THEME_SET.themes["base16-ocean.dark"]);
 
             // Process each line of the code snippet
             for line in LinesWithEndings::from(snippet) {
                 // Highlight the line
-                let highlighted = highlighter.highlight_line(line, &SYNTAX_SET).unwrap_or_default();
+                let highlighted = highlighter
+                    .highlight_line(line, &SYNTAX_SET)
+                    .unwrap_or_default();
 
                 // Convert syntect styles to ratatui styles and create spans
                 let mut spans = Vec::new();
                 for (style, text) in highlighted {
-                    // Convert syntect style to ratatui style
-                    let fg_color = match (style.foreground.r, style.foreground.g, style.foreground.b) {
-                        (0..=50, 0..=50, 0..=50) => Color::Black,
-                        (200..=255, 0..=50, 0..=50) => Color::Red,
-                        (0..=50, 200..=255, 0..=50) => Color::Green,
-                        (200..=255, 200..=255, 0..=50) => Color::Yellow,
-                        (0..=50, 0..=50, 200..=255) => Color::Blue,
-                        (200..=255, 0..=50, 200..=255) => Color::Magenta,
-                        (0..=50, 200..=255, 200..=255) => Color::Cyan,
-                        (200..=255, 200..=255, 200..=255) => Color::White,
-                        _ => Color::Gray,
-                    };
+                    // Convert to a ratatui Color
+                    let fg_color =
+                        Color::Rgb(style.foreground.r, style.foreground.g, style.foreground.b);
 
                     let ratatui_style = Style::default().fg(fg_color);
                     spans.push(Span::styled(text, ratatui_style));
@@ -220,30 +226,32 @@ pub fn render_learning_view(frame: &mut Frame, app: &App, layout: &[Rect]) {
             }
 
             // Add a bottom border
-            content_lines.push(Line::from("└────────────────────────────────────────┘"));
+            content_lines.push(Line::from(
+                "└──────────────────────────────────────────────────────────────────────┘",
+            ));
             content_lines.push(Line::from(""));
         }
 
         // Add exercises with text wrapping
-        content_lines.push(Line::from(vec![
-            Span::styled(
-                "Exercises:",
-                Style::default().add_modifier(Modifier::BOLD)
-            )
-        ]));
+        content_lines.push(Line::from(vec![Span::styled(
+            "Exercises:",
+            Style::default().add_modifier(Modifier::BOLD),
+        )]));
 
         for (i, exercise) in module.exercises.iter().enumerate() {
             // Wrap exercise text
-            let wrapped_lines = textwrap::wrap(exercise, 78);
+            for exercise_line in exercise.split("\\n") {
+                let wrapped_lines = textwrap::wrap(exercise_line, 78);
 
-            // First line includes the exercise number
-            if let Some(first_line) = wrapped_lines.first() {
-                content_lines.push(Line::from(format!("{}. {}", i + 1, first_line)));
-            }
+                // First line includes the exercise number
+                if let Some(first_line) = wrapped_lines.first() {
+                    content_lines.push(Line::from(format!("{}. {}", i + 1, first_line)));
+                }
 
-            // Subsequent lines are indented
-            for line in wrapped_lines.iter().skip(1) {
-                content_lines.push(Line::from(format!("   {}", line)));
+                // Subsequent lines are indented
+                for line in wrapped_lines.iter().skip(1) {
+                    content_lines.push(Line::from(format!("   {}", line)));
+                }
             }
         }
 
@@ -270,7 +278,11 @@ pub fn render_learning_view(frame: &mut Frame, app: &App, layout: &[Rect]) {
 pub fn render_loading_view(frame: &mut Frame, app: &App, layout: &[Rect]) {
     // Render title bar (same as learning view)
     let title = Paragraph::new(format!("Rust AI Mentor :: Level {}", app.selected_level))
-        .style(Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD))
+        .style(
+            Style::default()
+                .fg(Color::LightYellow)
+                .add_modifier(Modifier::BOLD),
+        )
         .block(Block::default().borders(Borders::BOTTOM));
     frame.render_widget(title, layout[0]);
 
@@ -279,7 +291,7 @@ pub fn render_loading_view(frame: &mut Frame, app: &App, layout: &[Rect]) {
         .direction(Direction::Vertical)
         .constraints([
             Constraint::Percentage(40),
-            Constraint::Length(3),
+            Constraint::Length(4),
             Constraint::Percentage(40),
         ])
         .split(layout[1]);
@@ -287,17 +299,14 @@ pub fn render_loading_view(frame: &mut Frame, app: &App, layout: &[Rect]) {
     // Render loading message with animation
     let loading_text = vec![
         Line::from(""),
-        Line::from(vec![
-            Span::styled(
-                "Generating your learning module... ⏳",
-                Style::default().add_modifier(Modifier::BOLD)
-            )
-        ]),
+        Line::from(vec![Span::styled(
+            "<  Generating your learning module...  >",
+            Style::default().add_modifier(Modifier::BOLD),
+        )]),
         Line::from(""),
     ];
 
-    let loading = Paragraph::new(loading_text)
-        .alignment(Alignment::Center);
+    let loading = Paragraph::new(loading_text).alignment(Alignment::Center);
 
     frame.render_widget(loading, loading_layout[1]);
 
@@ -336,11 +345,12 @@ pub fn render_help_modal(frame: &mut Frame) {
         Line::from("  Esc - Return to welcome screen"),
     ];
 
-    let help_content = Paragraph::new(help_text)
-        .block(Block::default()
+    let help_content = Paragraph::new(help_text).block(
+        Block::default()
             .title("Keybindings")
             .borders(Borders::ALL)
-            .border_type(BorderType::Rounded));
+            .border_type(BorderType::Rounded),
+    );
 
     render_modal(frame, area, help_content);
 }
@@ -352,13 +362,23 @@ pub fn render_quit_modal(frame: &mut Frame, app: &App) {
     // Create the quit confirmation content
     let mut options = Line::from(vec![
         Span::raw("[ "),
-        Span::styled("Yes", Style::default().add_modifier(
-            if app.quit_confirmation_selected { Modifier::REVERSED } else { Modifier::empty() }
-        )),
+        Span::styled(
+            "Yes",
+            Style::default().add_modifier(if app.quit_confirmation_selected {
+                Modifier::REVERSED
+            } else {
+                Modifier::empty()
+            }),
+        ),
         Span::raw(" ] [ "),
-        Span::styled("No", Style::default().add_modifier(
-            if !app.quit_confirmation_selected { Modifier::REVERSED } else { Modifier::empty() }
-        )),
+        Span::styled(
+            "No",
+            Style::default().add_modifier(if !app.quit_confirmation_selected {
+                Modifier::REVERSED
+            } else {
+                Modifier::empty()
+            }),
+        ),
         Span::raw(" ]"),
     ]);
 
@@ -368,9 +388,11 @@ pub fn render_quit_modal(frame: &mut Frame, app: &App) {
         options,
     ])
     .alignment(Alignment::Center)
-    .block(Block::default()
-        .borders(Borders::ALL)
-        .border_type(BorderType::Rounded));
+    .block(
+        Block::default()
+            .borders(Borders::ALL)
+            .border_type(BorderType::Rounded),
+    );
 
     render_modal(frame, area, quit_content);
 }

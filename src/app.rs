@@ -1,9 +1,9 @@
 // src/app.rs
-use anyhow::Result;
-use crossterm::event::{KeyEvent, KeyCode};
-use tokio::sync::mpsc;
 use crate::data;
 use crate::llm::LlmClient;
+use anyhow::Result;
+use crossterm::event::{KeyCode, KeyEvent};
+use tokio::sync::mpsc;
 
 pub struct LearningModule {
     pub topic: String,
@@ -66,7 +66,7 @@ impl App {
                             self.current_module = Some(module);
                             self.current_state = AppState::Learning;
                             self.scroll_offset = 0; // Reset scroll position for new content
-                        },
+                        }
                         Err(err) => {
                             // There was an error generating the module
                             tracing::error!("Failed to generate learning module: {}", err);
@@ -74,7 +74,10 @@ impl App {
                             // Create an error module
                             let error_module = LearningModule {
                                 topic: "Error Generating Content".to_string(),
-                                explanation: format!("There was an error generating content: {}\n\nPlease try again or select a different level.", err),
+                                explanation: format!(
+                                    "There was an error generating content: {}\n\nPlease try again or select a different level.",
+                                    err
+                                ),
                                 code_snippets: vec![],
                                 exercises: vec![],
                             };
@@ -83,10 +86,10 @@ impl App {
                             self.current_state = AppState::Learning;
                         }
                     }
-                },
+                }
                 Err(mpsc::error::TryRecvError::Empty) => {
                     // No message yet, continue waiting
-                },
+                }
                 Err(mpsc::error::TryRecvError::Disconnected) => {
                     // Channel is disconnected, this shouldn't happen in normal operation
                     tracing::error!("Module channel disconnected");
@@ -125,11 +128,11 @@ impl App {
                         // User selected "No"
                         self.show_quit_confirmation = false;
                     }
-                },
+                }
                 KeyCode::Left | KeyCode::Right | KeyCode::Char('h') | KeyCode::Char('l') => {
                     // Toggle between Yes and No
                     self.quit_confirmation_selected = !self.quit_confirmation_selected;
-                },
+                }
                 KeyCode::Esc | KeyCode::Char('q') => self.show_quit_confirmation = false,
                 _ => {}
             }
@@ -181,7 +184,9 @@ impl App {
                 // Spawn an async task to call the LLM
                 tokio::spawn(async move {
                     // Call the LLM to generate a learning module
-                    let result = llm_client.generate_learning_module(&topic_clone, level).await;
+                    let result = llm_client
+                        .generate_learning_module(&topic_clone, level)
+                        .await;
 
                     // Send the result back to the main thread
                     if let Err(e) = sender.send(result).await {
@@ -191,15 +196,17 @@ impl App {
 
                 // The app remains in the Loading state until the async task completes
                 // The tick method will handle the response when it arrives
-            },
+            }
             Err(err) => {
                 // If there was an error getting a topic, create an error module
                 tracing::error!("Failed to get a random topic: {}", err);
 
                 let module = LearningModule {
                     topic: "Error Loading Topic".to_string(),
-                    explanation: format!("There was an error loading a topic for level {}. Please try again.", 
-                                        self.selected_level),
+                    explanation: format!(
+                        "There was an error loading a topic for level {}. Please try again.",
+                        self.selected_level
+                    ),
                     code_snippets: vec![],
                     exercises: vec![],
                 };

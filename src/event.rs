@@ -1,6 +1,6 @@
 // src/event.rs
 use anyhow::Result;
-use crossterm::event::{self, Event as CrosstermEvent, KeyEvent, KeyCode};
+use crossterm::event::{self, Event as CrosstermEvent, KeyEvent};
 use std::time::Duration;
 use tokio::sync::mpsc;
 
@@ -36,6 +36,9 @@ impl EventHandler {
     }
 
     pub async fn next(&mut self) -> Result<Event> {
-        self.receiver.recv().await.ok_or_else(|| anyhow::anyhow!("Event channel closed"))
+        self.receiver
+            .recv()
+            .await
+            .ok_or_else(|| anyhow::anyhow!("Event channel closed"))
     }
 }

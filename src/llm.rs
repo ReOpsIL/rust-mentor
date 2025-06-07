@@ -1,9 +1,10 @@
 // src/llm.rs
-use anyhow::Result;
-use reqwest::Client;
-use serde::{Deserialize, Serialize};
 use crate::app::LearningModule;
 use crate::data::Topic;
+use anyhow::Result;
+use regex::Regex;
+use reqwest::Client;
+use serde::{Deserialize, Serialize};
 
 // OpenRouter API request structure
 #[derive(Debug, Serialize)]
@@ -64,10 +65,16 @@ impl LlmClient {
     }
 
     // Generate a learning module based on a topic and user level
-    pub async fn generate_learning_module(&self, topic: &Topic, level: u8) -> Result<LearningModule> {
+    pub async fn generate_learning_module(
+        &self,
+        topic: &Topic,
+        level: u8,
+    ) -> Result<LearningModule> {
         // Check if API key is available
         if self.api_key.is_empty() {
-            anyhow::bail!("OpenRouter API key is not set. Please set the OPENROUTER_API_KEY environment variable.");
+            anyhow::bail!(
+                "OpenRouter API key is not set. Please set the OPENROUTER_API_KEY environment variable."
+            );
         }
 
         // Create the prompt for the LLM
@@ -138,16 +145,15 @@ Source of this topic: {source}
         // Create the request body
         let request = OpenRouterRequest {
             model: "google/gemini-2.5-pro-preview".to_string(), // You can change this to a different model if needed
-            messages: vec![
-                Message {
-                    role: "user".to_string(),
-                    content: prompt,
-                },
-            ],
+            messages: vec![Message {
+                role: "user".to_string(),
+                content: prompt,
+            }],
         };
 
         // Make the API call
-        let response = self.client
+        let response = self
+            .client
             .post("https://openrouter.ai/api/v1/chat/completions")
             .header("Authorization", format!("Bearer {}", self.api_key))
             .header("Content-Type", "application/json")
@@ -176,9 +182,11 @@ Source of this topic: {source}
     // Assuming RawLearningModule is defined as above
     // And LearningModule is the struct you want to create
 
-    fn parse_response(&self, response: String, topic: &Topic) -> Result<LearningModule> {
+    pub(crate) fn parse_response(&self, response: String, topic: &Topic) -> Result<LearningModule> {
         // Check if the response is wrapped in a code block and extract the JSON
-        let json_str = if response.trim_start().starts_with("```json") && response.trim_end().ends_with("```") {
+        let json_str = if response.trim_start().starts_with("```json")
+            && response.trim_end().ends_with("```")
+        {
             // Extract the content between the code block markers
             let start_idx = response.find('{').unwrap_or(0);
             let end_idx = response.rfind('}').unwrap_or(response.len());
@@ -191,9 +199,9 @@ Source of this topic: {source}
         } else {
             &response
         };
-
+        
         // Try to parse the response directly into our target struct
-        match serde_json::from_str::<RawLearningModule>(json_str) {
+        match serde_json::from_str::<RawLearningModule>(&*json_str) {
             Ok(raw_module) => {
                 // Now you have a strongly-typed struct.
                 // You can add extra checks here if you want (e.g., ensure vecs are not empty).
@@ -211,7 +219,7 @@ Source of this topic: {source}
                         raw_module.exercises
                     },
                 })
-            },
+            }
             Err(e) => {
                 // This fallback will now be triggered far less often.
                 tracing::warn!("Failed to parse LLM response as JSON: {}", e);
@@ -220,7 +228,10 @@ Source of this topic: {source}
                 // Your existing fallback logic is fine.
                 Ok(LearningModule {
                     topic: topic.topic.clone(),
-                    explanation: format!("The AI generated a response that couldn't be parsed correctly. Here's the raw response:\n\n{}", response),
+                    explanation: format!(
+                        "The AI generated a response that couldn't be parsed correctly. Here's the raw response:\n\n{}",
+                        response
+                    ),
                     code_snippets: vec!["// No code examples could be extracted".to_string()],
                     exercises: vec!["No exercises could be extracted".to_string()],
                 })

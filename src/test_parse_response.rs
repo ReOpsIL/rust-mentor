@@ -1,11 +1,15 @@
-use anyhow::Result;
-use crate::llm::{LlmClient, RawLearningModule};
-use crate::app::LearningModule;
-use crate::data::Topic;
 
-fn main() -> Result<()> {
-    // Create a test response string similar to the one in the issue description
-    let response = r#"```json
+#[cfg(test)]
+mod tests {
+    use crate::app::LearningModule;
+    use crate::data::Topic;
+    use crate::llm::{LlmClient, RawLearningModule};
+    use anyhow::Result;
+
+    #[test]
+    fn test_parse_response() -> Result<()> {
+        // Create a test response string similar to the one in the issue description
+        let response = r#"```json
 {
   "explanation": "As a Solid Intermediate Rust programmer, you're familiar with `#[test]`. Now, let's master how Cargo structures and runs tests for robust projects.\n\nRust and Cargo distinguish between two primary types of tests: **unit tests** and **integration tests**.\n\n**Unit Tests:**\n- **Location:** Reside in the `src` directory, typically within a `mod tests { ... }` module inside the file they are testing (e.g., `src/lib.rs` or `src/my_module.rs`).\n- **Annotation:** The module is marked with `#[cfg(test)]`. This is a conditional compilation attribute that tells `rustc` to only compile and include this module when running `cargo test`, not during a normal `cargo build`.\n- **Purpose:** To test a small, isolated piece of code (a 'unit'), like a single function or a method.\n- **Key Advantage:** Because they are inside the same file/crate, unit tests can access private items (functions, modules, etc.) of their parent module. This is crucial for testing internal implementation details.\n\n**Integration Tests:**\n- **Location:** Each file in the `tests` directory at the root of your project (alongside `src`) is compiled as a separate, individual crate.\n- **Convention:** This directory is a special convention recognized by Cargo. You don't need to add `#[cfg(test)]` to the files in it.\n- **Purpose:** To test your library's public API as an external user would. They test how different parts of your library work together.\n- **Key Limitation:** As separate crates, integration tests can *only* access your library's `pub` items, just like any other external crate. They cannot see private functions or modules. This enforces testing against the public contract of your code.\n\n**Shared Code in Integration Tests:**\nIf you have multiple integration test files in `tests/` and need to share setup code or helpers, create a `tests/common/mod.rs`. This file is *not* treated as an integration test crate itself but can be used as a module by other test files (e.g., `mod common;`).\n\n**Running Tests with Cargo:**\n- `cargo test`: Runs all unit, integration, and documentation tests.\n- `cargo test my_test_name`: Runs only tests whose names contain `my_test_name`.\n- `cargo test --test integration_test_filename`: Runs only the tests in the specified integration test file.\n- `cargo test -- --ignored`: Runs tests marked with the `#[ignore]` attribute.\n- `should_panic`: Use `#[should_panic]` to assert that a test function panics as expected. You can even check for a specific panic message with `#[should_panic(expected = \"panic message\")]`.\n\nThis structured approach helps maintain a clean separation between testing internal logic and public contracts, leading to more maintainable and reliable Rust projects.",
   "code_snippets": [
@@ -19,31 +23,36 @@ fn main() -> Result<()> {
 }
 ```"#;
 
-    // Create a dummy topic
-    let topic = Topic {
-        topic: "Testing in Rust".to_string(),
-        source: "The Rust Programming Language".to_string(),
-    };
+        // Create a dummy topic
+        let topic = Topic {
+            topic: "Testing in Rust".to_string(),
+            source: "The Rust Programming Language".to_string(),
+            min_level: 0,
+        };
 
-    // Create a dummy LlmClient
-    let client = LlmClient::new("dummy_api_key".to_string());
+        // Create a dummy LlmClient
+        let client = LlmClient::new("dummy_api_key".to_string());
 
-    // Call the parse_response function
-    let result = client.parse_response(response.to_string(), &topic);
+        // Call the parse_response function
+        let result = client.parse_response(response.to_string(), &topic);
 
-    // Check if parsing was successful
-    match result {
-        Ok(module) => {
-            println!("Parsing successful!");
-            println!("Topic: {}", module.topic);
-            println!("Explanation (first 100 chars): {}", &module.explanation[..100.min(module.explanation.len())]);
-            println!("Number of code snippets: {}", module.code_snippets.len());
-            println!("Number of exercises: {}", module.exercises.len());
-            Ok(())
-        },
-        Err(e) => {
-            println!("Parsing failed: {}", e);
-            Err(e)
+        // Check if parsing was successful
+        match result {
+            Ok(module) => {
+                println!("Parsing successful!");
+                println!("Topic: {}", module.topic);
+                println!(
+                    "Explanation (first 100 chars): {}",
+                    &module.explanation[..100.min(module.explanation.len())]
+                );
+                println!("Number of code snippets: {}", module.code_snippets.len());
+                println!("Number of exercises: {}", module.exercises.len());
+                Ok(())
+            }
+            Err(e) => {
+                println!("Parsing failed: {}", e);
+                Err(e)
+            }
         }
     }
 }

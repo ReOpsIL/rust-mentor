@@ -1,17 +1,18 @@
 // src/main.rs
 mod app;
+mod components;
 mod data;
 mod event;
+mod llm;
 mod tui;
 mod ui;
-mod components;
-mod llm;
+mod test_parse_response;
 
 use anyhow::Result;
 use app::App;
 use event::{Event, EventHandler};
-use tui::Tui;
 use std::env;
+use tui::Tui;
 
 #[tokio::main]
 async fn main() -> Result<()> {

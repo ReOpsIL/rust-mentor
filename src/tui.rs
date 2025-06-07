@@ -1,4 +1,5 @@
 // src/tui.rs
+use crate::{app::App, ui};
 use anyhow::Result;
 use crossterm::{
     execute,
@@ -6,7 +7,6 @@ use crossterm::{
 };
 use ratatui::{backend::CrosstermBackend, Terminal};
 use std::io::{stdout, Stdout};
-use crate::{app::App, ui};
 
 pub struct Tui {
     terminal: Terminal<CrosstermBackend<Stdout>>,
