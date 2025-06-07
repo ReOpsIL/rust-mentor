@@ -41,6 +41,20 @@ pub struct LlmClient {
     api_key: String,
 }
 
+#[derive(Deserialize, Debug)]
+pub struct RawLearningModule {
+    pub explanation: String,
+    // Use `default` to prevent panics if the key is missing, although the new prompt makes this unlikely.
+    #[serde(default = "default_vec_string")]
+    pub code_snippets: Vec<String>,
+    #[serde(default = "default_vec_string")]
+    pub exercises: Vec<String>,
+}
+
+fn default_vec_string() -> Vec<String> {
+    Vec::new()
+}
+
 impl LlmClient {
     pub fn new(api_key: String) -> Self {
         Self {
@@ -67,6 +81,7 @@ impl LlmClient {
     }
 
     // Create a prompt for the LLM based on the topic and level
+    // In your struct impl
     fn create_prompt(&self, topic: &Topic, level: u8) -> String {
         let level_description = match level {
             1 => "Absolute Beginner",
@@ -82,21 +97,39 @@ impl LlmClient {
             _ => "Intermediate",
         };
 
+        // The refined prompt is much more explicit and strict.
         format!(
-            "You are an expert Rust programming language tutor. Create a learning module about '{}' for a {} level Rust programmer.\n\n\
-            The learning module should include:\n\
-            1. A clear explanation of the topic\n\
-            2. At least two code examples demonstrating the concept\n\
-            3. Two practice exercises\n\n\
-            Format your response as a JSON object with the following structure:\n\
-            {{\n\
-              \"explanation\": \"Your explanation here...\",\n\
-              \"code_snippets\": [\"First code example\", \"Second code example\"],\n\
-              \"exercises\": [\"First exercise\", \"Second exercise\"]\n\
-            }}\n\n\
-            Make sure your explanation and examples are appropriate for a {} level programmer.\n\
-            The source of this topic is: {}",
-            topic.topic, level_description, level_description, topic.source
+            r#"
+You are an expert Rust programming language tutor and a specialist in generating structured data.
+Your task is to create a learning module about the topic '{topic}' for a Rust programmer at the '{level_description}' level.
+
+**Formatting Rules:**
+1.  Your ENTIRE response MUST be a single, raw JSON object.
+2.  Do NOT include any introductory text, concluding remarks, or explanations outside of the JSON structure.
+3.  Do NOT wrap the JSON in markdown code blocks (like ```json ... ```).
+4.  Your response must start with `{{` and end with `}}`.
+5.  Ensure all strings within the JSON are properly escaped (e.g., use `\\n` for newlines, `\\"` for quotes, `\\\\` for backslashes). This is critical for the code snippets.
+
+**JSON Schema:**
+You must adhere strictly to the following JSON structure:
+{{
+  "explanation": "string",
+  "code_snippets": ["string", "string", ...],
+  "exercises": ["string", "string", ...]
+}}
+
+**Content Guidelines:**
+-   `explanation`: Provide a clear and concise explanation of the topic, tailored to the '{level_description}' level.
+-   `code_snippets`: Provide at least two complete, runnable, and well-commented Rust code examples. The code's complexity must be appropriate for the target level.
+-   `exercises`: Provide two distinct practice exercises. They should be clear problem statements that allow the user to apply the concepts from the explanation and code snippets.
+
+**Request:**
+Generate the learning module for topic '{topic}' at the '{level_description}' level, following all rules above.
+Source of this topic: {source}
+"#,
+            topic = topic.topic,
+            level_description = level_description,
+            source = topic.source
         )
     }
 
@@ -104,7 +137,7 @@ impl LlmClient {
     async fn call_openrouter_api(&self, prompt: String) -> Result<String> {
         // Create the request body
         let request = OpenRouterRequest {
-            model: "anthropic/claude-3-opus:beta".to_string(), // You can change this to a different model if needed
+            model: "google/gemini-2.5-pro-preview".to_string(), // You can change this to a different model if needed
             messages: vec![
                 Message {
                     role: "user".to_string(),
@@ -140,47 +173,51 @@ impl LlmClient {
     }
 
     // Parse the LLM response into a LearningModule
+    // Assuming RawLearningModule is defined as above
+    // And LearningModule is the struct you want to create
+
     fn parse_response(&self, response: String, topic: &Topic) -> Result<LearningModule> {
-        // Try to parse the response as JSON
-        match serde_json::from_str::<serde_json::Value>(&response) {
-            Ok(json) => {
-                // Extract the fields from the JSON
-                let explanation = json["explanation"]
-                    .as_str()
-                    .unwrap_or("No explanation provided")
-                    .to_string();
+        // Check if the response is wrapped in a code block and extract the JSON
+        let json_str = if response.trim_start().starts_with("```json") && response.trim_end().ends_with("```") {
+            // Extract the content between the code block markers
+            let start_idx = response.find('{').unwrap_or(0);
+            let end_idx = response.rfind('}').unwrap_or(response.len());
 
-                let code_snippets = json["code_snippets"]
-                    .as_array()
-                    .map(|arr| {
-                        arr.iter()
-                            .filter_map(|v| v.as_str().map(|s| s.to_string()))
-                            .collect()
-                    })
-                    .unwrap_or_else(|| vec!["// No code examples provided".to_string()]);
+            if start_idx < end_idx {
+                &response[start_idx..=end_idx]
+            } else {
+                &response
+            }
+        } else {
+            &response
+        };
 
-                let exercises = json["exercises"]
-                    .as_array()
-                    .map(|arr| {
-                        arr.iter()
-                            .filter_map(|v| v.as_str().map(|s| s.to_string()))
-                            .collect()
-                    })
-                    .unwrap_or_else(|| vec!["No exercises provided".to_string()]);
-
-                // Create and return the LearningModule
+        // Try to parse the response directly into our target struct
+        match serde_json::from_str::<RawLearningModule>(json_str) {
+            Ok(raw_module) => {
+                // Now you have a strongly-typed struct.
+                // You can add extra checks here if you want (e.g., ensure vecs are not empty).
                 Ok(LearningModule {
                     topic: topic.topic.clone(),
-                    explanation,
-                    code_snippets,
-                    exercises,
+                    explanation: raw_module.explanation,
+                    code_snippets: if raw_module.code_snippets.is_empty() {
+                        vec!["// No code examples provided".to_string()]
+                    } else {
+                        raw_module.code_snippets
+                    },
+                    exercises: if raw_module.exercises.is_empty() {
+                        vec!["No exercises provided".to_string()]
+                    } else {
+                        raw_module.exercises
+                    },
                 })
             },
             Err(e) => {
-                // If JSON parsing fails, try to extract content in a more forgiving way
+                // This fallback will now be triggered far less often.
                 tracing::warn!("Failed to parse LLM response as JSON: {}", e);
+                tracing::debug!("Problematic response body: {}", response); // Log the body for debugging
 
-                // Create a simple module with the raw response
+                // Your existing fallback logic is fine.
                 Ok(LearningModule {
                     topic: topic.topic.clone(),
                     explanation: format!("The AI generated a response that couldn't be parsed correctly. Here's the raw response:\n\n{}", response),
@@ -189,5 +226,37 @@ impl LlmClient {
                 })
             }
         }
+    }
+
+    #[cfg(test)]
+    pub fn test_parse_response_with_code_block(&self) -> Result<()> {
+        // Test response with code block markers
+        let response = r#"```json
+{
+  "explanation": "Test explanation",
+  "code_snippets": ["Test code snippet"],
+  "exercises": ["Test exercise"]
+}
+```"#;
+
+        // Create a dummy topic
+        let topic = Topic {
+            topic: "Test Topic".to_string(),
+            source: "Test Source".to_string(),
+            min_level: 5,
+        };
+
+        // Call parse_response
+        let result = self.parse_response(response.to_string(), &topic)?;
+
+        // Verify the result
+        assert_eq!(result.topic, "Test Topic");
+        assert_eq!(result.explanation, "Test explanation");
+        assert_eq!(result.code_snippets.len(), 1);
+        assert_eq!(result.code_snippets[0], "Test code snippet");
+        assert_eq!(result.exercises.len(), 1);
+        assert_eq!(result.exercises[0], "Test exercise");
+
+        Ok(())
     }
 }

@@ -2,6 +2,18 @@
 use ratatui::prelude::*;
 use ratatui::widgets::*;
 use crate::app::{App, AppState};
+use textwrap;
+use syntect::easy::HighlightLines;
+use syntect::highlighting::{ThemeSet, Style as SyntectStyle};
+use syntect::parsing::SyntaxSet;
+use syntect::util::{as_24_bit_terminal_escaped, LinesWithEndings};
+use lazy_static::lazy_static;
+
+// Initialize syntect resources once
+lazy_static! {
+    static ref SYNTAX_SET: SyntaxSet = SyntaxSet::load_defaults_newlines();
+    static ref THEME_SET: ThemeSet = ThemeSet::load_defaults();
+}
 
 pub fn render(frame: &mut Frame, app: &App) {
     // Main layout
@@ -140,13 +152,17 @@ pub fn render_learning_view(frame: &mut Frame, app: &App, layout: &[Rect]) {
         );
         content_lines.push(Line::from(""));
 
-        // Add explanation text (split by newlines)
+        // Add explanation text (split by newlines and wrap long lines)
         for line in module.explanation.split('\n') {
-            content_lines.push(Line::from(line));
+            // Wrap lines longer than 80 characters
+            let wrapped_lines = textwrap::wrap(line, 80);
+            for wrapped_line in wrapped_lines {
+                content_lines.push(Line::from(wrapped_line.to_string()));
+            }
         }
         content_lines.push(Line::from(""));
 
-        // Add code snippets
+        // Add code snippets with syntax highlighting
         for (i, snippet) in module.code_snippets.iter().enumerate() {
             content_lines.push(Line::from(vec![
                 Span::styled(
@@ -158,15 +174,49 @@ pub fn render_learning_view(frame: &mut Frame, app: &App, layout: &[Rect]) {
             // Add the code lines inside a block
             content_lines.push(Line::from(""));
 
-            // Note: In a real implementation, we would use ratatui-syntect for syntax highlighting
-            // Here we're just adding the lines with a simple border
-
             // Add a border line
             content_lines.push(Line::from("┌─ Rust Code ───────────────────────────┐"));
 
-            // Add the code lines
-            for line in snippet.split('\n') {
-                content_lines.push(Line::from(format!("│ {}", line)));
+            // Add the code lines with syntax highlighting using syntect
+            // Get the Rust syntax reference
+            let syntax_ref = SYNTAX_SET.find_syntax_by_extension("rs").unwrap_or_else(|| {
+                SYNTAX_SET.find_syntax_by_name("Rust").unwrap_or_else(|| {
+                    SYNTAX_SET.find_syntax_plain_text()
+                })
+            });
+
+            // Create a new highlighter with the Rust syntax and a theme
+            let mut highlighter = HighlightLines::new(syntax_ref, &THEME_SET.themes["base16-ocean.dark"]);
+
+            // Process each line of the code snippet
+            for line in LinesWithEndings::from(snippet) {
+                // Highlight the line
+                let highlighted = highlighter.highlight_line(line, &SYNTAX_SET).unwrap_or_default();
+
+                // Convert syntect styles to ratatui styles and create spans
+                let mut spans = Vec::new();
+                for (style, text) in highlighted {
+                    // Convert syntect style to ratatui style
+                    let fg_color = match (style.foreground.r, style.foreground.g, style.foreground.b) {
+                        (0..=50, 0..=50, 0..=50) => Color::Black,
+                        (200..=255, 0..=50, 0..=50) => Color::Red,
+                        (0..=50, 200..=255, 0..=50) => Color::Green,
+                        (200..=255, 200..=255, 0..=50) => Color::Yellow,
+                        (0..=50, 0..=50, 200..=255) => Color::Blue,
+                        (200..=255, 0..=50, 200..=255) => Color::Magenta,
+                        (0..=50, 200..=255, 200..=255) => Color::Cyan,
+                        (200..=255, 200..=255, 200..=255) => Color::White,
+                        _ => Color::Gray,
+                    };
+
+                    let ratatui_style = Style::default().fg(fg_color);
+                    spans.push(Span::styled(text, ratatui_style));
+                }
+
+                // Add the line with border
+                let mut line_spans = vec![Span::raw("│ ")];
+                line_spans.extend(spans);
+                content_lines.push(Line::from(line_spans));
             }
 
             // Add a bottom border
@@ -174,7 +224,7 @@ pub fn render_learning_view(frame: &mut Frame, app: &App, layout: &[Rect]) {
             content_lines.push(Line::from(""));
         }
 
-        // Add exercises
+        // Add exercises with text wrapping
         content_lines.push(Line::from(vec![
             Span::styled(
                 "Exercises:",
@@ -183,7 +233,18 @@ pub fn render_learning_view(frame: &mut Frame, app: &App, layout: &[Rect]) {
         ]));
 
         for (i, exercise) in module.exercises.iter().enumerate() {
-            content_lines.push(Line::from(format!("{}. {}", i + 1, exercise)));
+            // Wrap exercise text
+            let wrapped_lines = textwrap::wrap(exercise, 78);
+
+            // First line includes the exercise number
+            if let Some(first_line) = wrapped_lines.first() {
+                content_lines.push(Line::from(format!("{}. {}", i + 1, first_line)));
+            }
+
+            // Subsequent lines are indented
+            for line in wrapped_lines.iter().skip(1) {
+                content_lines.push(Line::from(format!("   {}", line)));
+            }
         }
 
         // Create the scrollable paragraph
