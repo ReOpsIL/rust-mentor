@@ -1,0 +1,14 @@
+[
+  { "topic": "Variable Bindings and Mutability", "source": "RBE 1.2", "min_level": 1 },
+  { "topic": "Basic Data Types (Primitives)", "source": "RBE 2.1", "min_level": 1 },
+  { "topic": "Structs", "source": "RBE 4.1", "min_level": 2 },
+  { "topic": "Enums and `match` expressions", "source": "RBE 4.2", "min_level": 3 },
+  { "topic": "Ownership and Move Semantics", "source": "The Book Ch 4.1", "min_level": 4 },
+  { "topic": "Borrowing and References", "source": "The Book Ch 4.2", "min_level": 4 },
+  { "topic": "Generic Functions", "source": "RBE 8.1", "min_level": 5 },
+  { "topic": "Traits", "source": "RBE 8.3", "min_level": 6 },
+  { "topic": "Error Handling with `Result`", "source": "RBE 18.2", "min_level": 6 },
+  { "topic": "Lifetimes", "source": "RBE 9.1", "min_level": 7 },
+  { "topic": "Closures", "source": "RBE 11.1", "min_level": 7 },
+  { "topic": "Basic Concurrency with Threads", "source": "The Book Ch 16.1", "min_level": 8 }
+]

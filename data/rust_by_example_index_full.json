@@ -1,0 +1,586 @@
+{
+  "book": {
+    "title": "Rust By Example",
+    "url": "https://doc.rust-lang.org/rust-by-example/",
+    "chapters": [
+      {
+        "chapter_number": 1,
+        "title": "Hello World",
+        "sections": [
+          {
+            "section_number": "1.1",
+            "title": "Comments",
+            "min_level": 1
+          },
+          {
+            "section_number": "1.2",
+            "title": "Formatted print",
+            "min_level": 1,
+            "sub_sections": [
+              {
+                "section_number": "1.2.1",
+                "title": "Debug",
+                "min_level": 1
+              },
+              {
+                "section_number": "1.2.2",
+                "title": "Display",
+                "min_level": 2,
+                "sub_sections": [
+                  {
+                    "section_number": "1.2.2.1",
+                    "title": "Testcase: List",
+                    "min_level": 2
+                  }
+                ]
+              },
+              {
+                "section_number": "1.2.3",
+                "title": "Formatting",
+                "min_level": 2
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "chapter_number": 2,
+        "title": "Primitives",
+        "sections": [
+          {
+            "section_number": "2.1",
+            "title": "Literals and operators",
+            "min_level": 1
+          },
+          {
+            "section_number": "2.2",
+            "title": "Tuples",
+            "min_level": 2
+          },
+          {
+            "section_number": "2.3",
+            "title": "Arrays and Slices",
+            "min_level": 2
+          }
+        ]
+      },
+      {
+        "chapter_number": 3,
+        "title": "Custom Types",
+        "sections": [
+          {
+            "section_number": "3.1",
+            "title": "Structures",
+            "min_level": 2
+          },
+          {
+            "section_number": "3.2",
+            "title": "Enums",
+            "min_level": 3,
+            "sub_sections": [
+              {
+                "section_number": "3.2.1",
+                "title": "use",
+                "min_level": 3
+              },
+              {
+                "section_number": "3.2.2",
+                "title": "C-like",
+                "min_level": 3
+              },
+              {
+                "section_number": "3.2.3",
+                "title": "Testcase: linked-list",
+                "min_level": 4
+              }
+            ]
+          },
+          {
+            "section_number": "3.3",
+            "title": "constants",
+            "min_level": 2
+          }
+        ]
+      },
+      {
+        "chapter_number": 4,
+        "title": "Variable Bindings",
+        "sections": [
+          {
+            "section_number": "4.1",
+            "title": "Mutability",
+            "min_level": 1
+          },
+          {
+            "section_number": "4.2",
+            "title": "Scope and Shadowing",
+            "min_level": 2
+          },
+          {
+            "section_number": "4.3",
+            "title": "Declare first",
+            "min_level": 2
+          },
+          {
+            "section_number": "4.4",
+            "title": "Freezing",
+            "min_level": 3
+          }
+        ]
+      },
+      {
+        "chapter_number": 5,
+        "title": "Types",
+        "sections": [
+          {
+            "section_number": "5.1",
+            "title": "Casting",
+            "min_level": 3
+          },
+          {
+            "section_number": "5.2",
+            "title": "Literals",
+            "min_level": 2
+          },
+          {
+            "section_number": "5.3",
+            "title": "Inference",
+            "min_level": 2
+          },
+          {
+            "section_number": "5.4",
+            "title": "Aliasing",
+            "min_level": 3
+          }
+        ]
+      },
+      {
+        "chapter_number": 6,
+        "title": "Conversion",
+        "sections": [
+          {
+            "section_number": "6.1",
+            "title": "From and Into",
+            "min_level": 3
+          },
+          {
+            "section_number": "6.2",
+            "title": "TryFrom and TryInto",
+            "min_level": 4
+          },
+          {
+            "section_number": "6.3",
+            "title": "To and from Strings",
+            "min_level": 3
+          }
+        ]
+      },
+      {
+        "chapter_number": 7,
+        "title": "Expressions",
+        "sections": [],
+        "min_level": 2
+      },
+      {
+        "chapter_number": 8,
+        "title": "Flow of Control",
+        "sections": [
+          {
+            "section_number": "8.1",
+            "title": "if/else",
+            "min_level": 1
+          },
+          {
+            "section_number": "8.2",
+            "title": "loop",
+            "min_level": 2,
+            "sub_sections": [
+              {
+                "section_number": "8.2.1",
+                "title": "Nesting and labels",
+                "min_level": 3
+              },
+              {
+                "section_number": "8.2.2",
+                "title": "Returning from loops",
+                "min_level": 3
+              }
+            ]
+          },
+          {
+            "section_number": "8.3",
+            "title": "while",
+            "min_level": 2
+          },
+          {
+            "section_number": "8.4",
+            "title": "for and range",
+            "min_level": 2
+          },
+          {
+            "section_number": "8.5",
+            "title": "match",
+            "min_level": 3,
+            "sub_sections": [
+              {
+                "section_number": "8.5.1",
+                "title": "Destructuring",
+                "min_level": 4,
+                "sub_sections": [
+                  { "section_number": "8.5.1.1", "title": "tuples", "min_level": 4 },
+                  { "section_number": "8.5.1.2", "title": "arrays/slices", "min_level": 4 },
+                  { "section_number": "8.5.1.3", "title": "enums", "min_level": 4 },
+                  { "section_number": "8.5.1.4", "title": "pointers/ref", "min_level": 5 },
+                  { "section_number": "8.5.1.5", "title": "structs", "min_level": 4 }
+                ]
+              },
+              { "section_number": "8.5.2", "title": "Guards", "min_level": 5 },
+              { "section_number": "8.5.3", "title": "Binding", "min_level": 5 }
+            ]
+          },
+          { "section_number": "8.6", "title": "if let", "min_level": 3 },
+          { "section_number": "8.7", "title": "let-else", "min_level": 4 },
+          { "section_number": "8.8", "title": "while let", "min_level": 4 }
+        ]
+      },
+      {
+        "chapter_number": 9,
+        "title": "Functions",
+        "sections": [
+          { "section_number": "9.1", "title": "Methods", "min_level": 3 },
+          {
+            "section_number": "9.2",
+            "title": "Closures",
+            "min_level": 5,
+            "sub_sections": [
+              { "section_number": "9.2.1", "title": "Capturing", "min_level": 5 },
+              { "section_number": "9.2.2", "title": "As input parameters", "min_level": 6 },
+              { "section_number": "9.2.3", "title": "Type anonymity", "min_level": 6 },
+              { "section_number": "9.2.4", "title": "Input functions", "min_level": 6 },
+              { "section_number": "9.2.5", "title": "As output parameters", "min_level": 7 },
+              {
+                "section_number": "9.2.6",
+                "title": "Examples in std",
+                "min_level": 6,
+                "sub_sections": [
+                  { "section_number": "9.2.6.1", "title": "Iterator::any", "min_level": 6 },
+                  { "section_number": "9.2.6.2", "title": "Searching through iterators", "min_level": 6 }
+                ]
+              }
+            ]
+          },
+          { "section_number": "9.3", "title": "Higher Order Functions", "min_level": 7 },
+          { "section_number": "9.4", "title": "Diverging functions", "min_level": 7 }
+        ]
+      },
+      {
+        "chapter_number": 10,
+        "title": "Modules",
+        "sections": [
+          { "section_number": "10.1", "title": "Visibility", "min_level": 4 },
+          { "section_number": "10.2", "title": "Struct visibility", "min_level": 4 },
+          { "section_number": "10.3", "title": "The use declaration", "min_level": 4 },
+          { "section_number": "10.4", "title": "super and self", "min_level": 5 },
+          { "section_number": "10.5", "title": "File hierarchy", "min_level": 5 }
+        ]
+      },
+      {
+        "chapter_number": 11,
+        "title": "Crates",
+        "sections": [
+          { "section_number": "11.1", "title": "Creating a Library", "min_level": 5 },
+          { "section_number": "11.2", "title": "Using a Library", "min_level": 5 }
+        ]
+      },
+      {
+        "chapter_number": 12,
+        "title": "Cargo",
+        "sections": [
+          { "section_number": "12.1", "title": "Dependencies", "min_level": 4 },
+          { "section_number": "12.2", "title": "Conventions", "min_level": 4 },
+          { "section_number": "12.3", "title": "Tests", "min_level": 5 },
+          { "section_number": "12.4", "title": "Build Scripts", "min_level": 6 }
+        ]
+      },
+      {
+        "chapter_number": 13,
+        "title": "Attributes",
+        "sections": [
+          { "section_number": "13.1", "title": "dead_code", "min_level": 4 },
+          { "section_number": "13.2", "title": "Crates", "min_level": 5 },
+          {
+            "section_number": "13.3",
+            "title": "cfg",
+            "min_level": 6,
+            "sub_sections": [
+              { "section_number": "13.3.1", "title": "Custom", "min_level": 7 }
+            ]
+          }
+        ]
+      },
+      {
+        "chapter_number": 14,
+        "title": "Generics",
+        "sections": [
+          { "section_number": "14.1", "title": "Functions", "min_level": 5 },
+          { "section_number": "14.2", "title": "Implementation", "min_level": 5 },
+          { "section_number": "14.3", "title": "Traits", "min_level": 6 },
+          {
+            "section_number": "14.4",
+            "title": "Bounds",
+            "min_level": 6,
+            "sub_sections": [
+              { "section_number": "14.4.1", "title": "Testcase: empty bounds", "min_level": 7 }
+            ]
+          },
+          { "section_number": "14.5", "title": "Multiple bounds", "min_level": 6 },
+          { "section_number": "14.6", "title": "Where clauses", "min_level": 7 },
+          { "section_number": "14.7", "title": "New Type Idiom", "min_level": 7 },
+          {
+            "section_number": "14.8",
+            "title": "Associated items",
+            "min_level": 8,
+            "sub_sections": [
+              { "section_number": "14.8.1", "title": "The Problem", "min_level": 8 },
+              { "section_number": "14.8.2", "title": "Associated types", "min_level": 8 }
+            ]
+          },
+          {
+            "section_number": "14.9",
+            "title": "Phantom type parameters",
+            "min_level": 9,
+            "sub_sections": [
+              { "section_number": "14.9.1", "title": "Testcase: unit clarification", "min_level": 9 }
+            ]
+          }
+        ]
+      },
+      {
+        "chapter_number": 15,
+        "title": "Scoping rules",
+        "sections": [
+          { "section_number": "15.1", "title": "RAII", "min_level": 4 },
+          {
+            "section_number": "15.2",
+            "title": "Ownership and moves",
+            "min_level": 4,
+            "sub_sections": [
+              { "section_number": "15.2.1", "title": "Mutability", "min_level": 4 },
+              { "section_number": "15.2.2", "title": "Partial moves", "min_level": 5 }
+            ]
+          },
+          {
+            "section_number": "15.3",
+            "title": "Borrowing",
+            "min_level": 4,
+            "sub_sections": [
+              { "section_number": "15.3.1", "title": "Mutability", "min_level": 4 },
+              { "section_number": "15.3.2", "title": "Aliasing", "min_level": 5 },
+              { "section_number": "15.3.3", "title": "The ref pattern", "min_level": 5 }
+            ]
+          },
+          {
+            "section_number": "15.4",
+            "title": "Lifetimes",
+            "min_level": 7,
+            "sub_sections": [
+              { "section_number": "15.4.1", "title": "Explicit annotation", "min_level": 7 },
+              { "section_number": "15.4.2", "title": "Functions", "min_level": 7 },
+              { "section_number": "15.4.3", "title": "Methods", "min_level": 7 },
+              { "section_number": "15.4.4", "title": "Structs", "min_level": 8 },
+              { "section_number": "15.4.5", "title": "Traits", "min_level": 8 },
+              { "section_number": "15.4.6", "title": "Bounds", "min_level": 8 },
+              { "section_number": "15.4.7", "title": "Coercion", "min_level": 9 },
+              { "section_number": "15.4.8", "title": "Static", "min_level": 8 },
+              { "section_number": "15.4.9", "title": "Elision", "min_level": 8 }
+            ]
+          }
+        ]
+      },
+      {
+        "chapter_number": 16,
+        "title": "Traits",
+        "sections": [
+          { "section_number": "16.1", "title": "Derive", "min_level": 5 },
+          { "section_number": "16.2", "title": "Returning Traits with dyn", "min_level": 7 },
+          { "section_number": "16.3", "title": "Operator Overloading", "min_level": 7 },
+          { "section_number": "16.4", "title": "Drop", "min_level": 6 },
+          { "section_number": "16.5", "title": "Iterators", "min_level": 6 },
+          { "section_number": "16.6", "title": "impl Trait", "min_level": 7 },
+          { "section_number": "16.7", "title": "Clone", "min_level": 5 },
+          { "section_number": "16.8", "title": "Supertraits", "min_level": 8 },
+          { "section_number": "16.9", "title": "Disambiguating overlapping traits", "min_level": 8 }
+        ]
+      },
+      {
+        "chapter_number": 17,
+        "title": "macro_rules!",
+        "sections": [
+          {
+            "section_number": "17.1",
+            "title": "Syntax",
+            "min_level": 9,
+            "sub_sections": [
+              { "section_number": "17.1.1", "title": "Designators", "min_level": 9 },
+              { "section_number": "17.1.2", "title": "Overload", "min_level": 9 },
+              { "section_number": "17.1.3", "title": "Repeat", "min_level": 10 }
+            ]
+          },
+          { "section_number": "17.2", "title": "DRY (Don't Repeat Yourself)", "min_level": 9 },
+          { "section_number": "17.3", "title": "DSL (Domain Specific Languages)", "min_level": 10 },
+          { "section_number": "17.4", "title": "Variadics", "min_level": 10 }
+        ]
+      },
+      {
+        "chapter_number": 18,
+        "title": "Error handling",
+        "sections": [
+          { "section_number": "18.1", "title": "panic", "min_level": 4 },
+          { "section_number": "18.2", "title": "abort & unwind", "min_level": 6 },
+          {
+            "section_number": "18.3",
+            "title": "Option & unwrap",
+            "min_level": 5,
+            "sub_sections": [
+              { "section_number": "18.3.1", "title": "Unpacking options with ?", "min_level": 6 },
+              { "section_number": "18.3.2", "title": "Combinators: map", "min_level": 6 },
+              { "section_number": "18.3.3", "title": "Combinators: and_then", "min_level": 7 },
+              { "section_number": "18.3.4", "title": "Defaults: or, or_else, get_or_insert, get_or_insert_with", "min_level": 7 }
+            ]
+          },
+          {
+            "section_number": "18.4",
+            "title": "Result",
+            "min_level": 6,
+            "sub_sections": [
+              { "section_number": "18.4.1", "title": "map for Result", "min_level": 6 },
+              { "section_number": "18.4.2", "title": "aliases for Result", "min_level": 7 },
+              { "section_number": "18.4.3", "title": "Early returns", "min_level": 6 },
+              { "section_number": "18.4.4", "title": "Introducing ?", "min_level": 6 }
+            ]
+          },
+          {
+            "section_number": "18.5",
+            "title": "Multiple error types",
+            "min_level": 7,
+            "sub_sections": [
+              { "section_number": "18.5.1", "title": "Pulling Results out of Options", "min_level": 7 },
+              { "section_number": "18.5.2", "title": "Defining an error type", "min_level": 8 },
+              { "section_number": "18.5.3", "title": "Boxing errors", "min_level": 8 },
+              { "section_number": "18.5.4", "title": "Other uses of ?", "min_level": 7 },
+              { "section_number": "18.5.5", "title": "Wrapping errors", "min_level": 8 }
+            ]
+          },
+          { "section_number": "18.6", "title": "Iterating over Results", "min_level": 7 }
+        ]
+      },
+      {
+        "chapter_number": 19,
+        "title": "Std library types",
+        "sections": [
+          { "section_number": "19.1", "title": "Box, stack and heap", "min_level": 5 },
+          { "section_number": "19.2", "title": "Vectors", "min_level": 3 },
+          { "section_number": "19.3", "title": "Strings", "min_level": 3 },
+          { "section_number": "19.4", "title": "Option", "min_level": 5 },
+          {
+            "section_number": "19.5",
+            "title": "Result",
+            "min_level": 6,
+            "sub_sections": [
+              { "section_number": "19.5.1", "title": "?", "min_level": 6 }
+            ]
+          },
+          { "section_number": "19.6", "title": "panic!", "min_level": 4 },
+          {
+            "section_number": "19.7",
+            "title": "HashMap",
+            "min_level": 4,
+            "sub_sections": [
+              { "section_number": "19.7.1", "title": "Alternate/custom key types", "min_level": 5 },
+              { "section_number": "19.7.2", "title": "HashSet", "min_level": 5 }
+            ]
+          },
+          { "section_number": "19.8", "title": "Rc", "min_level": 7 },
+          { "section_number": "19.9", "title": "Arc", "min_level": 8 }
+        ]
+      },
+      {
+        "chapter_number": 20,
+        "title": "Std misc",
+        "sections": [
+          {
+            "section_number": "20.1",
+            "title": "Threads",
+            "min_level": 8,
+            "sub_sections": [
+              { "section_number": "20.1.1", "title": "Testcase: map-reduce", "min_level": 9 }
+            ]
+          },
+          { "section_number": "20.2", "title": "Channels", "min_level": 8 },
+          { "section_number": "20.3", "title": "Path", "min_level": 5 },
+          {
+            "section_number": "20.4",
+            "title": "File I/O",
+            "min_level": 5,
+            "sub_sections": [
+              { "section_number": "20.4.1", "title": "open", "min_level": 5 },
+              { "section_number": "20.4.2", "title": "create", "min_level": 5 },
+              { "section_number": "20.4.3", "title": "read_lines", "min_level": 6 }
+            ]
+          },
+          {
+            "section_number": "20.5",
+            "title": "Child processes",
+            "min_level": 7,
+            "sub_sections": [
+              { "section_number": "20.5.1", "title": "Pipes", "min_level": 7 },
+              { "section_number": "20.5.2", "title": "Wait", "min_level": 7 }
+            ]
+          },
+          { "section_number": "20.6", "title": "Filesystem Operations", "min_level": 6 },
+          {
+            "section_number": "20.7",
+            "title": "Program arguments",
+            "min_level": 5,
+            "sub_sections": [
+              { "section_number": "20.7.1", "title": "Argument parsing", "min_level": 6 }
+            ]
+          },
+          { "section_number": "20.8", "title": "Foreign Function Interface", "min_level": 10 }
+        ]
+      },
+      {
+        "chapter_number": 21,
+        "title": "Testing",
+        "sections": [
+          { "section_number": "21.1", "title": "Unit testing", "min_level": 5 },
+          { "section_number": "21.2", "title": "Documentation testing", "min_level": 6 },
+          { "section_number": "21.3", "title": "Integration testing", "min_level": 6 },
+          { "section_number": "21.4", "title": "Dev-dependencies", "min_level": 6 }
+        ]
+      },
+      {
+        "chapter_number": 22,
+        "title": "Unsafe Operations",
+        "sections": [
+          { "section_number": "22.1", "title": "Inline assembly", "min_level": 10 }
+        ]
+      },
+      {
+        "chapter_number": 23,
+        "title": "Compatibility",
+        "sections": [
+          { "section_number": "23.1", "title": "Raw identifiers", "min_level": 8 }
+        ]
+      },
+      {
+        "chapter_number": 24,
+        "title": "Meta",
+        "sections": [
+          { "section_number": "24.1", "title": "Documentation", "min_level": 5 },
+          { "section_number": "24.2", "title": "Playground", "min_level": 3 }
+        ]
+      }
+    ]
+  }
+}

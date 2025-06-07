@@ -1,0 +1,556 @@
+{
+  "book": {
+    "title": "The Rust Programming Language",
+    "url": "https://doc.rust-lang.org/book/",
+    "introduction": "An overview of the philosophy of Rust, its strengths, and how to use this book.",
+    "chapters": [
+      {
+        "chapter_number": 1,
+        "title": "Getting Started",
+        "sections": [
+          {
+            "section_number": "1.1",
+            "title": "Installation",
+            "description": "How to install Rust on Linux, macOS, and Windows.",
+            "min_level": 1
+          },
+          {
+            "section_number": "1.2",
+            "title": "Hello, World!",
+            "description": "Writing and running your first simple Rust program.",
+            "min_level": 1
+          },
+          {
+            "section_number": "1.3",
+            "title": "Hello, Cargo!",
+            "description": "Using Cargo, Rust's build system and package manager, to create and run a project.",
+            "min_level": 1
+          }
+        ]
+      },
+      {
+        "chapter_number": 2,
+        "title": "Programming a Guessing Game",
+        "sections": [
+          {
+            "section_number": "2.0",
+            "title": "An interactive guessing game tutorial",
+            "description": "A hands-on project to learn basic concepts like variables, types, functions, and external crates.",
+            "min_level": 2
+          }
+        ]
+      },
+      {
+        "chapter_number": 3,
+        "title": "Common Programming Concepts",
+        "sections": [
+          {
+            "section_number": "3.1",
+            "title": "Variables and Mutability",
+            "description": "Understanding how Rust handles variables, constants, and shadowing.",
+            "min_level": 1
+          },
+          {
+            "section_number": "3.2",
+            "title": "Data Types",
+            "description": "Exploring scalar types (integers, floats, booleans, chars) and compound types (tuples, arrays).",
+            "min_level": 1
+          },
+          {
+            "section_number": "3.3",
+            "title": "Functions",
+            "description": "Defining and calling functions, including parameters and return values.",
+            "min_level": 2
+          },
+          {
+            "section_number": "3.4",
+            "title": "Comments",
+            "description": "How to write comments in Rust code.",
+            "min_level": 1
+          },
+          {
+            "section_number": "3.5",
+            "title": "Control Flow",
+            "description": "Using if expressions, loops (loop, while, for), and matching.",
+            "min_level": 2
+          }
+        ]
+      },
+      {
+        "chapter_number": 4,
+        "title": "Understanding Ownership",
+        "sections": [
+          {
+            "section_number": "4.1",
+            "title": "What Is Ownership?",
+            "description": "Introducing Rust's core feature: the ownership system, move semantics, and stack vs. heap.",
+            "min_level": 4
+          },
+          {
+            "section_number": "4.2",
+            "title": "References and Borrowing",
+            "description": "How to borrow values without taking ownership using references.",
+            "min_level": 4
+          },
+          {
+            "section_number": "4.3",
+            "title": "The Slice Type",
+            "description": "Using slices to reference a contiguous sequence of elements in a collection.",
+            "min_level": 3
+          }
+        ]
+      },
+      {
+        "chapter_number": 5,
+        "title": "Using Structs to Structure Related Data",
+        "sections": [
+          {
+            "section_number": "5.1",
+            "title": "Defining and Instantiating Structs",
+            "description": "Creating custom data types with structs.",
+            "min_level": 2
+          },
+          {
+            "section_number": "5.2",
+            "title": "An Example Program Using Structs",
+            "description": "A practical example of using structs to calculate the area of a rectangle.",
+            "min_level": 2
+          },
+          {
+            "section_number": "5.3",
+            "title": "Method Syntax",
+            "description": "Defining methods on structs to specify behavior.",
+            "min_level": 3
+          }
+        ]
+      },
+      {
+        "chapter_number": 6,
+        "title": "Enums and Pattern Matching",
+        "sections": [
+          {
+            "section_number": "6.1",
+            "title": "Defining an Enum",
+            "description": "Creating enumerations to represent a value that can be one of a set of possible variants.",
+            "min_level": 3
+          },
+          {
+            "section_number": "6.2",
+            "title": "The match Control Flow Construct",
+            "description": "Using the powerful `match` keyword for exhaustive pattern matching.",
+            "min_level": 3
+          },
+          {
+            "section_number": "6.3",
+            "title": "Concise Control Flow with if let",
+            "description": "Using `if let` for simpler matching when you only care about one pattern.",
+            "min_level": 3
+          }
+        ]
+      },
+      {
+        "chapter_number": 7,
+        "title": "Managing Growing Projects with Packages, Crates, and Modules",
+        "sections": [
+          {
+            "section_number": "7.1",
+            "title": "Packages and Crates",
+            "description": "Understanding the distinction between packages and crates.",
+            "min_level": 4
+          },
+          {
+            "section_number": "7.2",
+            "title": "Defining Modules to Control Scope and Privacy",
+            "description": "Organizing code into modules for better structure and encapsulation.",
+            "min_level": 4
+          },
+          {
+            "section_number": "7.3",
+            "title": "Paths for Referring to an Item in the Module Tree",
+            "description": "How to specify paths to items in different modules.",
+            "min_level": 4
+          },
+          {
+            "section_number": "7.4",
+            "title": "Bringing Paths into Scope with the use Keyword",
+            "description": "Using the `use` keyword to shorten long paths.",
+            "min_level": 4
+          },
+          {
+            "section_number": "7.5",
+            "title": "Separating Modules into Different Files",
+            "description": "Splitting a large module into multiple files.",
+            "min_level": 5
+          }
+        ]
+      },
+      {
+        "chapter_number": 8,
+        "title": "Common Collections",
+        "sections": [
+          {
+            "section_number": "8.1",
+            "title": "Storing Lists of Values with Vectors",
+            "description": "Using `Vec<T>`, a growable list type.",
+            "min_level": 3
+          },
+          {
+            "section_number": "8.2",
+            "title": "Storing UTF-8 Encoded Text with Strings",
+            "description": "Working with the `String` type for heap-allocated, mutable text.",
+            "min_level": 3
+          },
+          {
+            "section_number": "8.3",
+            "title": "Storing Keys with Associated Values in Hash Maps",
+            "description": "Using `HashMap<K, V>` for key-value data storage.",
+            "min_level": 4
+          }
+        ]
+      },
+      {
+        "chapter_number": 9,
+        "title": "Error Handling",
+        "sections": [
+          {
+            "section_number": "9.1",
+            "title": "Unrecoverable Errors with panic!",
+            "description": "Understanding when and how to use `panic!` to stop a program.",
+            "min_level": 4
+          },
+          {
+            "section_number": "9.2",
+            "title": "Recoverable Errors with Result",
+            "description": "Using the `Result<T, E>` enum for handling errors that can be recovered from.",
+            "min_level": 5
+          },
+          {
+            "section_number": "9.3",
+            "title": "To panic! or Not to panic!",
+            "description": "Guidelines on choosing the appropriate error handling mechanism.",
+            "min_level": 5
+          }
+        ]
+      },
+      {
+        "chapter_number": 10,
+        "title": "Generic Types, Traits, and Lifetimes",
+        "sections": [
+          {
+            "section_number": "10.1",
+            "title": "Generic Data Types",
+            "description": "Writing code that works over a variety of concrete types using generics.",
+            "min_level": 5
+          },
+          {
+            "section_number": "10.2",
+            "title": "Traits: Defining Shared Behavior",
+            "description": "Using traits to define interfaces and shared functionality.",
+            "min_level": 6
+          },
+          {
+            "section_number": "10.3",
+            "title": "Validating References with Lifetimes",
+            "description": "Ensuring references are valid for as long as they are needed using lifetime annotations.",
+            "min_level": 7
+          }
+        ]
+      },
+      {
+        "chapter_number": 11,
+        "title": "Writing Automated Tests",
+        "sections": [
+          {
+            "section_number": "11.1",
+            "title": "How to Write Tests",
+            "description": "The basics of writing unit tests with the `#[test]` attribute.",
+            "min_level": 5
+          },
+          {
+            "section_number": "11.2",
+            "title": "Controlling How Tests Are Run",
+            "description": "Using command-line options to filter and manage test execution.",
+            "min_level": 5
+          },
+          {
+            "section_number": "11.3",
+            "title": "Test Organization",
+            "description": "How to structure tests, including unit tests and integration tests.",
+            "min_level": 6
+          }
+        ]
+      },
+      {
+        "chapter_number": 12,
+        "title": "An I/O Project: Building a Command Line Program",
+        "sections": [
+          {
+            "section_number": "12.0",
+            "title": "A 'minigrep' tutorial",
+            "description": "A project to build a simplified version of the `grep` command-line tool, focusing on I/O and code organization.",
+            "min_level": 6
+          }
+        ]
+      },
+      {
+        "chapter_number": 13,
+        "title": "Functional Language Features: Iterators and Closures",
+        "sections": [
+          {
+            "section_number": "13.1",
+            "title": "Closures: Anonymous Functions that Can Capture Their Environment",
+            "description": "Using closures for short, anonymous functions.",
+            "min_level": 7
+          },
+          {
+            "section_number": "13.2",
+            "title": "Processing a Series of Items with Iterators",
+            "description": "Using the `Iterator` trait to perform operations on sequences of items.",
+            "min_level": 6
+          }
+        ]
+      },
+      {
+        "chapter_number": 14,
+        "title": "More about Cargo and Crates.io",
+        "sections": [
+          {
+            "section_number": "14.1",
+            "title": "Customizing Builds with Release Profiles",
+            "description": "Configuring build settings for development and release modes.",
+            "min_level": 5
+          },
+          {
+            "section_number": "14.2",
+            "title": "Publishing a Crate to Crates.io",
+            "description": "How to share your libraries with the Rust community.",
+            "min_level": 6
+          },
+          {
+            "section_number": "14.3",
+            "title": "Cargo Workspaces",
+            "description": "Managing multiple related packages in one project.",
+            "min_level": 7
+          }
+        ]
+      },
+      {
+        "chapter_number": 15,
+        "title": "Smart Pointers",
+        "sections": [
+          {
+            "section_number": "15.1",
+            "title": "Box<T> for Pointing to Data on the Heap",
+            "description": "Using `Box<T>` for heap allocation.",
+            "min_level": 6
+          },
+          {
+            "section_number": "15.2",
+            "title": "Treating Smart Pointers Like Regular References with the Deref Trait",
+            "description": "Implementing the `Deref` trait to customize dereferencing.",
+            "min_level": 7
+          },
+          {
+            "section_number": "15.3",
+            "title": "Running Code on Cleanup with the Drop Trait",
+            "description": "Customizing cleanup logic with the `Drop` trait.",
+            "min_level": 6
+          },
+          {
+            "section_number": "15.4",
+            "title": "Rc<T>, the Reference Counted Smart Pointer",
+            "description": "Enabling multiple ownership with reference counting.",
+            "min_level": 7
+          },
+          {
+            "section_number": "15.5",
+            "title": "RefCell<T> and the Interior Mutability Pattern",
+            "description": "Mutating data even with immutable references.",
+            "min_level": 8
+          },
+          {
+            "section_number": "15.6",
+            "title": "Reference Cycles Can Leak Memory",
+            "description": "Understanding and preventing memory leaks with `Rc<T>` and `RefCell<T>`.",
+            "min_level": 8
+          }
+        ]
+      },
+      {
+        "chapter_number": 16,
+        "title": "Fearless Concurrency",
+        "sections": [
+          {
+            "section_number": "16.1",
+            "title": "Using Threads to Run Code Simultaneously",
+            "description": "Creating and managing native OS threads.",
+            "min_level": 8
+          },
+          {
+            "section_number": "16.2",
+            "title": "Using Message Passing to Transfer Data Between Threads",
+            "description": "Communicating between threads using channels.",
+            "min_level": 8
+          },
+          {
+            "section_number": "16.3",
+            "title": "Shared-State Concurrency",
+            "description": "Sharing memory safely between threads using `Mutex` and `Arc`.",
+            "min_level": 9
+          },
+          {
+            "section_number": "16.4",
+            "title": "Extensible Concurrency with the Sync and Send Traits",
+            "description": "Understanding Rust's built-in traits for thread safety.",
+            "min_level": 10
+          }
+        ]
+      },
+      {
+        "chapter_number": 17,
+        "title": "Object Oriented Programming Features of Rust",
+        "sections": [
+          {
+            "section_number": "17.1",
+            "title": "Characteristics of Object-Oriented Languages",
+            "description": "Comparing Rust to traditional OOP concepts.",
+            "min_level": 6
+          },
+          {
+            "section_number": "17.2",
+            "title": "Using Trait Objects That Allow for Values of Different Types",
+            "description": "Implementing polymorphism using trait objects.",
+            "min_level": 7
+          },
+          {
+            "section_number": "17.3",
+            "title": "Implementing an Object-Oriented Design Pattern",
+            "description": "Applying the State pattern in an idiomatic Rust way.",
+            "min_level": 8
+          }
+        ]
+      },
+      {
+        "chapter_number": 18,
+        "title": "Patterns and Matching",
+        "sections": [
+          {
+            "section_number": "18.1",
+            "title": "All the Places Patterns Can Be Used",
+            "description": "A comprehensive look at where patterns are valid in Rust syntax.",
+            "min_level": 6
+          },
+          {
+            "section_number": "18.2",
+            "title": "Refutability: Whether a Pattern Might Fail to Match",
+            "description": "Understanding the difference between refutable and irrefutable patterns.",
+            "min_level": 7
+          },
+          {
+            "section_number": "18.3",
+            "title": "Pattern Syntax",
+            "description": "A detailed reference of all the syntax available for patterns.",
+            "min_level": 7
+          }
+        ]
+      },
+      {
+        "chapter_number": 19,
+        "title": "Advanced Features",
+        "sections": [
+          {
+            "section_number": "19.1",
+            "title": "Unsafe Rust",
+            "description": "Working outside the guarantees of the Rust compiler with `unsafe` blocks.",
+            "min_level": 9
+          },
+          {
+            "section_number": "19.2",
+            "title": "Advanced Traits",
+            "description": "Exploring associated types, default generic type parameters, and operator overloading.",
+            "min_level": 8
+          },
+          {
+            "section_number": "19.3",
+            "title": "Advanced Types",
+            "description": "Using newtypes, type aliases, the never type, and dynamically sized types.",
+            "min_level": 8
+          },
+          {
+            "section_number": "19.4",
+            "title": "Advanced Functions and Closures",
+            "description": "Covering function pointers and returning closures.",
+            "min_level": 9
+          },
+          {
+            "section_number": "19.5",
+            "title": "Macros",
+            "description": "An introduction to declarative and procedural macros for meta-programming.",
+            "min_level": 10
+          }
+        ]
+      },
+      {
+        "chapter_number": 20,
+        "title": "Final Project: Building a Multithreaded Web Server",
+        "sections": [
+          {
+            "section_number": "20.1",
+            "title": "Building a Single-Threaded Web Server",
+            "description": "The first step of the project: listening to TCP connections and responding to HTTP requests.",
+            "min_level": 7
+          },
+          {
+            "section_number": "20.2",
+            "title": "Turning Our Single-Threaded Server into a Multithreaded Server",
+            "description": "Implementing a thread pool to handle multiple requests concurrently.",
+            "min_level": 9
+          },
+          {
+            "section_number": "20.3",
+            "title": "Graceful Shutdown and Cleanup",
+            "description": "Adding logic to ensure the server and its threads shut down cleanly.",
+            "min_level": 9
+          }
+        ]
+      }
+    ],
+    "appendices": [
+      {
+        "appendix_letter": "A",
+        "title": "Keywords",
+        "min_level": 3
+      },
+      {
+        "appendix_letter": "B",
+        "title": "Operators and Symbols",
+        "min_level": 3
+      },
+      {
+        "appendix_letter": "C",
+        "title": "Derivable Traits",
+        "min_level": 5
+      },
+      {
+        "appendix_letter": "D",
+        "title": "Useful Development Tools",
+        "min_level": 4
+      },
+      {
+        "appendix_letter": "E",
+        "title": "Editions",
+        "min_level": 5
+      },
+      {
+        "appendix_letter": "F",
+        "title": "Translations of the Book",
+        "min_level": 1
+      },
+      {
+        "appendix_letter": "G",
+        "title": "How Rust is Made and 'Nightly Rust'",
+        "min_level": 6
+      }
+    ]
+  }
+}
