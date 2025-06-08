@@ -2,9 +2,10 @@
 use crate::app::LearningModule;
 use crate::data::Topic;
 use anyhow::Result;
-use regex::Regex;
+use chrono::Local;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
+use crate::prompt_response::{CodeSnippet, Exercise, PromptResponse};
 
 // OpenRouter API request structure
 #[derive(Debug, Serialize)]
@@ -42,19 +43,12 @@ pub struct LlmClient {
     api_key: String,
 }
 
-#[derive(Deserialize, Debug)]
-pub struct RawLearningModule {
-    pub explanation: String,
-    // Use `default` to prevent panics if the key is missing, although the new prompt makes this unlikely.
-    #[serde(default = "default_vec_string")]
-    pub code_snippets: Vec<String>,
-    #[serde(default = "default_vec_string")]
-    pub exercises: Vec<String>,
-}
-
-fn default_vec_string() -> Vec<String> {
-    Vec::new()
-}
+// #[derive(Deserialize, Debug)]
+// pub struct RawLearningModule {
+//     pub explanation: String,
+//     pub code_snippets: String,
+//     pub exercises: String,
+// }
 
 impl LlmClient {
     pub fn new(api_key: String) -> Self {
@@ -83,6 +77,10 @@ impl LlmClient {
         // Call the OpenRouter API
         let response = self.call_openrouter_api(prompt).await?;
 
+        // Save the response to a file for debugging
+        let current_datetime = Local::now().format("%Y-%m-%d_%H-%M-%S").to_string();
+        let filename = format!("response_{}.txt", current_datetime);
+        std::fs::write(&filename, &response)?;
         // Parse the response into a LearningModule
         self.parse_response(response, topic)
     }
@@ -110,25 +108,48 @@ impl LlmClient {
 You are an expert Rust programming language tutor and a specialist in generating structured data.
 Your task is to create a learning module about the topic '{topic}' for a Rust programmer at the '{level_description}' level.
 
-**Formatting Rules:**
-1.  Your ENTIRE response MUST be a single, raw JSON object.
-2.  Do NOT include any introductory text, concluding remarks, or explanations outside of the JSON structure.
-3.  Do NOT wrap the JSON in markdown code blocks (like ```json ... ```).
-4.  Your response must start with `{{` and end with `}}`.
-5.  Ensure all strings within the JSON are properly escaped (e.g., use `\\n` for newlines, `\\"` for quotes, `\\\\` for backslashes). This is critical for the code snippets.
+**Output Formatting Rules:**
+- Your output should be *only* the text of the prompt described above.
+- Do not include any conversational text or explanations outside of the prompt itself.
+- Structure the entire output clearly using the following delimiters.
+- Ensure the "explanation",  "exercise descriptions" sections are valid Markdown.
+- Ensure "exercise code"  sections are valid RUST language code.
+- Output Structure Structure: 
 
-**JSON Schema:**
-You must adhere strictly to the following JSON structure:
-{{
-  "explanation": "string",
-  "code_snippets": ["string", "string", ...],
-  "exercises": ["string", "string", ...]
-}}
+    ```
+    <<<explanation: [explanation title]>>>
+    [Detailed explanation for the topic ...]
+
+    <<<code_snippet 1: [code snippets title 1]>>>
+    # code snippet: [ code snippet description 1]
+    [ The actual example code snippet 1 ... ]
+
+    <<<code_snippet 2: [code snippet title 2]>>>
+    # code snippet: [ code snippet description 2]
+    [ The actual example code snippet 2 ... ]
+
+    <<<code_snippet n: [code snippet title n]>>>
+    # code snippet: [ code snippet description n]
+    [ The actual example code snippet n ... ]
+
+    <<<exercise 1: [ exercise name 1 ]>>>
+    # exercise description: [  exercise description 1 ]
+    [ The actual exercise 1 code ... ]
+
+    <<<exercise 2: [ exercise name 2 ]>>>
+    # exercise description: [ exercise description 2] 
+    [ The actual exercise 2 code ... ]
+
+    <<<exercise n: [ exercise name n ]>>>
+    # exercise description: [ exercise description n] 
+    [ The actual exercise n code ... ]
+
+    ```
 
 **Content Guidelines:**
 -   `explanation`: Provide a clear and concise explanation of the topic, tailored to the '{level_description}' level.
--   `code_snippets`: Provide at least two complete, runnable, and well-commented Rust code examples. The code's complexity must be appropriate for the target level.
--   `exercises`: Provide two distinct practice exercises. They should be clear problem statements that allow the user to apply the concepts from the explanation and code snippets.
+-   `code_snippets`: Provide several complete, runnable, and well-commented Rust code examples. The code's complexity must be appropriate for the target level.
+-   `exercises`: Provide several distinct practice exercises. They should be clear problem statements that allow the user to apply the concepts from the explanation and code snippets.
 
 **Request:**
 Generate the learning module for topic '{topic}' at the '{level_description}' level, following all rules above.
@@ -184,39 +205,48 @@ Source of this topic: {source}
 
     pub(crate) fn parse_response(&self, response: String, topic: &Topic) -> Result<LearningModule> {
         // Check if the response is wrapped in a code block and extract the JSON
-        let json_str = if response.trim_start().starts_with("```json")
-            && response.trim_end().ends_with("```")
-        {
-            // Extract the content between the code block markers
-            let start_idx = response.find('{').unwrap_or(0);
-            let end_idx = response.rfind('}').unwrap_or(response.len());
+        // let json_str = if response.trim_start().starts_with("```json")
+        //     && response.trim_end().ends_with("```")
+        // {
+        //     // Extract the content between the code block markers
+        //     let start_idx = response.find('{').unwrap_or(0);
+        //     let end_idx = response.rfind('}').unwrap_or(response.len());
+        //
+        //     if start_idx < end_idx {
+        //         &response[start_idx..=end_idx]
+        //     } else {
+        //         &response
+        //     }
+        // } else {
+        //     &response
+        // };
 
-            if start_idx < end_idx {
-                &response[start_idx..=end_idx]
-            } else {
-                &response
-            }
-        } else {
-            &response
-        };
-        
-        // Try to parse the response directly into our target struct
-        match serde_json::from_str::<RawLearningModule>(&*json_str) {
-            Ok(raw_module) => {
+        let mut prompt_res = PromptResponse::parse_response(response.clone());
+        match prompt_res {
+            Ok(prompt_res) => {
                 // Now you have a strongly-typed struct.
                 // You can add extra checks here if you want (e.g., ensure vecs are not empty).
                 Ok(LearningModule {
                     topic: topic.topic.clone(),
-                    explanation: raw_module.explanation,
-                    code_snippets: if raw_module.code_snippets.is_empty() {
-                        vec!["// No code examples provided".to_string()]
+                    explanation: prompt_res.explanation,
+                    code_snippets: if prompt_res.code_snippets.is_empty() {
+                        vec![CodeSnippet {
+                            title: "No code examples provided".to_string(),
+                            description: "// No code examples provided".to_string(),
+                            code: "// No code examples provided".to_string(),
+                        }]
                     } else {
-                        raw_module.code_snippets
+                        prompt_res.code_snippets
                     },
-                    exercises: if raw_module.exercises.is_empty() {
-                        vec!["No exercises provided".to_string()]
+                    exercises: if prompt_res.exercises.is_empty() {
+                        vec![Exercise {
+                            name: "No exercises provided".to_string(),
+                            description: "// No exercises provided".to_string(),
+                            code: "// No exercises provided".to_string(),
+                            }
+                        ]
                     } else {
-                        raw_module.exercises
+                        prompt_res.exercises
                     },
                 })
             }
@@ -232,42 +262,19 @@ Source of this topic: {source}
                         "The AI generated a response that couldn't be parsed correctly. Here's the raw response:\n\n{}",
                         response
                     ),
-                    code_snippets: vec!["// No code examples could be extracted".to_string()],
-                    exercises: vec!["No exercises could be extracted".to_string()],
+                    code_snippets:  vec![CodeSnippet {
+                        title: "Error - No code examples extracted.".to_string(),
+                        description: "// No code examples extracted".to_string(),
+                        code: "// No code examples extracted".to_string(),
+                    }],
+                    exercises: vec![Exercise {
+                        name: "Error - No exercises extracted from LLM response".to_string(),
+                        description: "// No exercises ...".to_string(),
+                        code: "// No code provided".to_string(),
+                    }
+                    ]
                 })
             }
         }
-    }
-
-    #[cfg(test)]
-    pub fn test_parse_response_with_code_block(&self) -> Result<()> {
-        // Test response with code block markers
-        let response = r#"```json
-{
-  "explanation": "Test explanation",
-  "code_snippets": ["Test code snippet"],
-  "exercises": ["Test exercise"]
-}
-```"#;
-
-        // Create a dummy topic
-        let topic = Topic {
-            topic: "Test Topic".to_string(),
-            source: "Test Source".to_string(),
-            min_level: 5,
-        };
-
-        // Call parse_response
-        let result = self.parse_response(response.to_string(), &topic)?;
-
-        // Verify the result
-        assert_eq!(result.topic, "Test Topic");
-        assert_eq!(result.explanation, "Test explanation");
-        assert_eq!(result.code_snippets.len(), 1);
-        assert_eq!(result.code_snippets[0], "Test code snippet");
-        assert_eq!(result.exercises.len(), 1);
-        assert_eq!(result.exercises[0], "Test exercise");
-
-        Ok(())
     }
 }

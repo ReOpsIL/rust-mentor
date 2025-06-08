@@ -5,11 +5,13 @@ use anyhow::Result;
 use crossterm::event::{KeyCode, KeyEvent};
 use tokio::sync::mpsc;
 
+use crate::prompt_response::{CodeSnippet, Exercise};
+
 pub struct LearningModule {
     pub topic: String,
     pub explanation: String,
-    pub code_snippets: Vec<String>,
-    pub exercises: Vec<String>,
+    pub code_snippets: Vec<CodeSnippet>,
+    pub exercises: Vec<Exercise>,
 }
 
 pub enum AppState {
@@ -79,7 +81,7 @@ impl App {
                                     err
                                 ),
                                 code_snippets: vec![],
-                                exercises: vec![],
+                                exercises: vec![]
                             };
 
                             self.current_module = Some(error_module);
@@ -208,7 +210,7 @@ impl App {
                         self.selected_level
                     ),
                     code_snippets: vec![],
-                    exercises: vec![],
+                    exercises: vec![]
                 };
 
                 // Set the current module

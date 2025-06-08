@@ -175,18 +175,22 @@ pub fn render_learning_view(frame: &mut Frame, app: &App, layout: &[Rect]) {
         // Add code snippets with syntax highlighting
         for (i, snippet) in module.code_snippets.iter().enumerate() {
             content_lines.push(Line::from(vec![Span::styled(
-                format!("Code Example {}:", i + 1),
+                format!("{}: {}", snippet.title, i + 1),
                 Style::default().add_modifier(Modifier::BOLD),
             )]));
-
+            
+            if !snippet.description.is_empty() {
+                content_lines.push(Line::from(snippet.description.clone()));
+            }
+            
             // Add the code lines inside a block
             content_lines.push(Line::from(""));
-
+            
             // Add a border line
             content_lines.push(Line::from(
                 "┌─ Rust Code ─────────────────────────────────────────────────────────┐",
             ));
-
+            
             // Add the code lines with syntax highlighting using syntect
             // Get the Rust syntax reference
             let syntax_ref = SYNTAX_SET
@@ -196,70 +200,81 @@ pub fn render_learning_view(frame: &mut Frame, app: &App, layout: &[Rect]) {
                         .find_syntax_by_name("Rust")
                         .unwrap_or_else(|| SYNTAX_SET.find_syntax_plain_text())
                 });
-
+            
             // Create a new highlighter with the Rust syntax and a theme
             let mut highlighter =
                 HighlightLines::new(syntax_ref, &THEME_SET.themes["base16-ocean.dark"]);
-
+            
             // Process each line of the code snippet
-            for line in LinesWithEndings::from(snippet) {
+            for line in LinesWithEndings::from(&snippet.code) {
                 // Highlight the line
                 let highlighted = highlighter
                     .highlight_line(line, &SYNTAX_SET)
                     .unwrap_or_default();
-
+                
                 // Convert syntect styles to ratatui styles and create spans
                 let mut spans = Vec::new();
                 for (style, text) in highlighted {
                     // Convert to a ratatui Color
                     let fg_color =
                         Color::Rgb(style.foreground.r, style.foreground.g, style.foreground.b);
-
+                    
                     let ratatui_style = Style::default().fg(fg_color);
                     spans.push(Span::styled(text, ratatui_style));
                 }
-
+                
                 // Add the line with border
                 let mut line_spans = vec![Span::raw("│ ")];
                 line_spans.extend(spans);
                 content_lines.push(Line::from(line_spans));
             }
-
+            
             // Add a bottom border
             content_lines.push(Line::from(
                 "└──────────────────────────────────────────────────────────────────────┘",
             ));
             content_lines.push(Line::from(""));
         }
-
+        
         // Add exercises with text wrapping
         content_lines.push(Line::from(vec![Span::styled(
             "Exercises:",
             Style::default().add_modifier(Modifier::BOLD),
         )]));
-
+        
         for (i, exercise) in module.exercises.iter().enumerate() {
-            // Wrap exercise text
-            for exercise_line in exercise.split("\\n") {
+            content_lines.push(Line::from(vec![Span::styled(
+                format!("Exercise {}: {}", i + 1, exercise.name),
+                Style::default().add_modifier(Modifier::BOLD),
+            )]));
+            
+            if !exercise.description.is_empty() {
+                content_lines.push(Line::from(exercise.description.clone()));
+            }
+            
+            // Wrap exercise code text
+            for exercise_line in exercise.code.split('\n') {
                 let wrapped_lines = textwrap::wrap(exercise_line, 78);
-
-                // First line includes the exercise number
+                
+                // First line
                 if let Some(first_line) = wrapped_lines.first() {
-                    content_lines.push(Line::from(format!("{}. {}", i + 1, first_line)));
+                    content_lines.push(Line::from(first_line.to_string()));
                 }
-
+                
                 // Subsequent lines are indented
                 for line in wrapped_lines.iter().skip(1) {
                     content_lines.push(Line::from(format!("   {}", line)));
                 }
             }
+            
+            content_lines.push(Line::from(""));
         }
-
+        
         // Create the scrollable paragraph
         let content = Paragraph::new(content_lines)
             .block(Block::default().borders(Borders::NONE))
             .scroll((app.scroll_offset, 0));
-
+        
         frame.render_widget(content, layout[1]);
     } else {
         // If no module is loaded, show a placeholder
@@ -267,7 +282,7 @@ pub fn render_learning_view(frame: &mut Frame, app: &App, layout: &[Rect]) {
             .alignment(Alignment::Center);
         frame.render_widget(placeholder, layout[1]);
     }
-
+    
     // Render footer
     let status = Paragraph::new("(n) New Module | (k/↑, j/↓) Scroll | (?) Help | (q) Quit")
         .alignment(Alignment::Center)

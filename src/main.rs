@@ -6,7 +6,7 @@ mod event;
 mod llm;
 mod tui;
 mod ui;
-mod test_parse_response;
+mod prompt_response;
 
 use anyhow::Result;
 use app::App;
