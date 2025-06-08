@@ -6,7 +6,9 @@ use crossterm::event::{KeyCode, KeyEvent};
 use tokio::sync::mpsc;
 
 use crate::prompt_response::{CodeSnippet, Exercise};
+use crate::cargo_project;
 
+#[derive(Clone)]
 pub struct LearningModule {
     pub topic: String,
     pub explanation: String,
@@ -65,9 +67,19 @@ impl App {
                     match result {
                         Ok(module) => {
                             // Successfully received a module, update the state
-                            self.current_module = Some(module);
+                            self.current_module = Some(module.clone());
                             self.current_state = AppState::Learning;
                             self.scroll_offset = 0; // Reset scroll position for new content
+
+                            // Create a Cargo project for the learning module
+                            match cargo_project::create_cargo_project(&module, self.selected_level) {
+                                Ok(project_dir) => {
+                                    tracing::info!("Created Cargo project at: {:?}", project_dir);
+                                }
+                                Err(err) => {
+                                    tracing::error!("Failed to create Cargo project: {}", err);
+                                }
+                            }
                         }
                         Err(err) => {
                             // There was an error generating the module

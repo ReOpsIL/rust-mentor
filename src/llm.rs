@@ -5,6 +5,7 @@ use anyhow::Result;
 use chrono::Local;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
+use crate::config::Config;
 use crate::prompt_response::{CodeSnippet, Exercise, PromptResponse};
 
 // OpenRouter API request structure
@@ -93,9 +94,9 @@ impl LlmClient {
         let response = self.call_openrouter_api(prompt).await?;
 
         // Save the response to a file for debugging
-        let current_datetime = Local::now().format("%Y-%m-%d_%H-%M-%S").to_string();
-        let filename = format!("response_{}.txt", current_datetime);
-        std::fs::write(&filename, &response)?;
+        //let current_datetime = Local::now().format("%Y-%m-%d_%H-%M-%S").to_string();
+        //let filename = format!("response_{}.txt", current_datetime);
+        //std::fs::write(&filename, &response)?;
         // Parse the response into a LearningModule
         self.parse_response(response, topic)
     }
@@ -179,8 +180,9 @@ Source of this topic: {source}
     // Call the OpenRouter API with the prompt
     async fn call_openrouter_api(&self, prompt: String) -> Result<String> {
         // Create the request body
+        let model_id = Config::load().unwrap().model;
         let request = OpenRouterRequest {
-            model: "google/gemma-3n-e4b-it:free".to_string(), // You can change this to a different model if needed
+            model: model_id, // You can change this to a different model if needed
             messages: vec![Message {
                 role: "user".to_string(),
                 content: prompt,

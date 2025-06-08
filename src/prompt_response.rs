@@ -39,6 +39,10 @@ impl PromptResponse {
         };
 
         for line in response.lines() {
+            let line = line
+                .replace("```rust","")
+                .replace("```","");
+                
             if line.starts_with("<<<explanation:") {
                 current_section = "explanation".to_string();
                 // Extract the explanation title
@@ -86,15 +90,15 @@ impl PromptResponse {
             } else {
                 match current_section.as_str() {
                     "explanation" => {
-                        explanation.push_str(line);
+                        explanation.push_str(line.as_str());
                         explanation.push('\n');
                     },
                     "code_snippet" => {
-                        current_code_snippet.code.push_str(line);
+                        current_code_snippet.code.push_str(line.as_str());
                         current_code_snippet.code.push('\n');
                     },
                     "exercise" => {
-                        current_exercise.code.push_str(line);
+                        current_exercise.code.push_str(line.as_str());
                         current_exercise.code.push('\n');
                     },
                     _ => (),

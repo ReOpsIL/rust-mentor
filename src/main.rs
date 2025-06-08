@@ -7,17 +7,22 @@ mod llm;
 mod tui;
 mod ui;
 mod prompt_response;
+mod config;
+mod cargo_project;
 
 use anyhow::Result;
 use app::App;
 use event::{Event, EventHandler};
 use std::env;
 use tui::Tui;
+use crate::config::Config;
 
 #[tokio::main]
 async fn main() -> Result<()> {
     // Initialize logging
     tracing_subscriber::fmt::init();
+
+    Config::load().expect("Error - Could not setup configuration.");
 
     // Read OPENROUTER_API_KEY environment variable
     let api_key = env::var("OPENROUTER_API_KEY").unwrap_or_else(|_| {
@@ -33,7 +38,7 @@ async fn main() -> Result<()> {
     tui.enter()?;
 
     // Create an event handler
-    let mut event_handler = EventHandler::new(250); // 250ms tick rate
+    let mut event_handler = EventHandler::new(80); // 250ms tick rate
 
     // Start the main loop
     while app.is_running {

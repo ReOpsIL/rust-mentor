@@ -9,13 +9,15 @@ crossterm = "0.27"
 ratatui = { version = "0.26", features = ["crossterm"] }
 tokio = { version = "1.36", features = ["full"] }
 tracing = "0.1"
-tracing-subscriber = "0.3"
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
-rand = "0.8"
+tracing-subscriber = "0.3.19"
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+rand = "0.9.1"
 reqwest = { version = "0.11", features = ["json"] }
 syntect = "5.0"
 textwrap = "0.16"
 lazy_static = "1.4"
-regex = "1.11.1"
 chrono = "0.4.38"
+toml_edit = { version = "0.22.27", features = ["serde"] }
+directories = "6"
+toml = "0.8.23"
