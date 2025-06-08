@@ -375,7 +375,7 @@ pub fn render_quit_modal(frame: &mut Frame, app: &App) {
     let area = centered_rect(40, 20, frame.size());
 
     // Create the quit confirmation content
-    let mut options = Line::from(vec![
+    let options = Line::from(vec![
         Span::raw("[ "),
         Span::styled(
             "Yes",

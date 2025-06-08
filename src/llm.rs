@@ -221,7 +221,7 @@ Source of this topic: {source}
         //     &response
         // };
 
-        let mut prompt_res = PromptResponse::parse_response(response.clone());
+        let prompt_res = PromptResponse::parse_response(response.clone());
         match prompt_res {
             Ok(prompt_res) => {
                 // Now you have a strongly-typed struct.
