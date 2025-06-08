@@ -4,10 +4,10 @@ use lazy_static::lazy_static;
 use ratatui::prelude::*;
 use ratatui::widgets::*;
 use syntect::easy::HighlightLines;
-use syntect::highlighting::ThemeSet;
+use syntect::highlighting::{ThemeSet};
 use syntect::parsing::SyntaxSet;
-use syntect::util::LinesWithEndings;
 use textwrap;
+use textwrap::wrap;
 
 // Initialize syntect resources once
 lazy_static! {
@@ -137,7 +137,54 @@ fn level_description(level: u8) -> &'static str {
     }
 }
 
+
+fn add_colors<'a>(highlighter: &mut HighlightLines, code: &'a str) -> Vec<Line<'a>> {
+    let mut content_lines: Vec<Line<'a>> = Vec::new();
+
+    // Split and wrap lines directly from code
+    for line in code.split('\n') {
+        let wrapped_lines = wrap(line, 78); // Returns Vec<Cow<'_, str>>
+        for wrapped_line in wrapped_lines {
+            // Convert the wrapped line to a String to extend its lifetime
+            let wrapped_owned = wrapped_line.to_string();
+
+            // Highlight the wrapped line
+            let highlighted = highlighter
+                .highlight_line(&wrapped_owned, &SYNTAX_SET)
+                .unwrap_or_default();
+
+            // Convert syntect styles to ratatui styles
+            let mut spans = Vec::new();
+            for (style, text) in highlighted {
+                let fg_color = Color::Rgb(style.foreground.r, style.foreground.g, style.foreground.b);
+                let ratatui_style = Style::default().fg(fg_color);
+                spans.push(Span::styled(text.to_string(), ratatui_style)); // Convert text to owned String
+            }
+
+            // Add the line with border
+            let mut line_spans = vec![Span::raw("│ ")];
+            line_spans.extend(spans);
+            content_lines.push(Line::from(line_spans));
+        }
+    }
+
+    content_lines
+}
 pub fn render_learning_view(frame: &mut Frame, app: &App, layout: &[Rect]) {
+    // Add the code lines with syntax highlighting using syntect
+    // Get the Rust syntax reference
+    let syntax_ref = SYNTAX_SET
+        .find_syntax_by_extension("rs")
+        .unwrap_or_else(|| {
+            SYNTAX_SET
+                .find_syntax_by_name("Rust")
+                .unwrap_or_else(|| SYNTAX_SET.find_syntax_plain_text())
+        });
+
+    // Create a new highlighter with the Rust syntax and a theme
+    let mut highlighter =
+        HighlightLines::new(syntax_ref, &THEME_SET.themes["base16-ocean.dark"]);
+
     // Render title bar
     let title = Paragraph::new(format!("Rust AI Mentor :: Level {}", app.selected_level))
         .style(
@@ -162,14 +209,8 @@ pub fn render_learning_view(frame: &mut Frame, app: &App, layout: &[Rect]) {
         )]));
         content_lines.push(Line::from(""));
 
-        // Add explanation text (split by newlines and wrap long lines)
-        for line in module.explanation.split("\\n") {
-            // Wrap lines longer than 80 characters
-            let wrapped_lines = textwrap::wrap(line, 80);
-            for wrapped_line in wrapped_lines {
-                content_lines.push(Line::from(wrapped_line.to_string()));
-            }
-        }
+        content_lines.append(&mut add_colors(&mut highlighter, &module.explanation));
+
         content_lines.push(Line::from(""));
 
         // Add code snippets with syntax highlighting
@@ -178,103 +219,54 @@ pub fn render_learning_view(frame: &mut Frame, app: &App, layout: &[Rect]) {
                 format!("{}: {}", snippet.title, i + 1),
                 Style::default().add_modifier(Modifier::BOLD),
             )]));
-            
+
             if !snippet.description.is_empty() {
                 content_lines.push(Line::from(snippet.description.clone()));
             }
-            
+
             // Add the code lines inside a block
             content_lines.push(Line::from(""));
-            
+
             // Add a border line
             content_lines.push(Line::from(
-                "┌─ Rust Code ─────────────────────────────────────────────────────────┐",
+                "┌─ Rust Code ───────────────────────────────────────────────────────────────────────┐",
             ));
-            
-            // Add the code lines with syntax highlighting using syntect
-            // Get the Rust syntax reference
-            let syntax_ref = SYNTAX_SET
-                .find_syntax_by_extension("rs")
-                .unwrap_or_else(|| {
-                    SYNTAX_SET
-                        .find_syntax_by_name("Rust")
-                        .unwrap_or_else(|| SYNTAX_SET.find_syntax_plain_text())
-                });
-            
-            // Create a new highlighter with the Rust syntax and a theme
-            let mut highlighter =
-                HighlightLines::new(syntax_ref, &THEME_SET.themes["base16-ocean.dark"]);
-            
-            // Process each line of the code snippet
-            for line in LinesWithEndings::from(&snippet.code) {
-                // Highlight the line
-                let highlighted = highlighter
-                    .highlight_line(line, &SYNTAX_SET)
-                    .unwrap_or_default();
-                
-                // Convert syntect styles to ratatui styles and create spans
-                let mut spans = Vec::new();
-                for (style, text) in highlighted {
-                    // Convert to a ratatui Color
-                    let fg_color =
-                        Color::Rgb(style.foreground.r, style.foreground.g, style.foreground.b);
-                    
-                    let ratatui_style = Style::default().fg(fg_color);
-                    spans.push(Span::styled(text, ratatui_style));
-                }
-                
-                // Add the line with border
-                let mut line_spans = vec![Span::raw("│ ")];
-                line_spans.extend(spans);
-                content_lines.push(Line::from(line_spans));
-            }
-            
+
+            content_lines.append(&mut add_colors(&mut highlighter, &snippet.code));
+
             // Add a bottom border
             content_lines.push(Line::from(
-                "└──────────────────────────────────────────────────────────────────────┘",
+                "└────────────────────────────────────────────────────────────────────────────────────┘",
             ));
             content_lines.push(Line::from(""));
         }
-        
+
         // Add exercises with text wrapping
         content_lines.push(Line::from(vec![Span::styled(
             "Exercises:",
             Style::default().add_modifier(Modifier::BOLD),
         )]));
-        
+
         for (i, exercise) in module.exercises.iter().enumerate() {
             content_lines.push(Line::from(vec![Span::styled(
                 format!("Exercise {}: {}", i + 1, exercise.name),
                 Style::default().add_modifier(Modifier::BOLD),
             )]));
-            
+
             if !exercise.description.is_empty() {
                 content_lines.push(Line::from(exercise.description.clone()));
             }
-            
-            // Wrap exercise code text
-            for exercise_line in exercise.code.split('\n') {
-                let wrapped_lines = textwrap::wrap(exercise_line, 78);
-                
-                // First line
-                if let Some(first_line) = wrapped_lines.first() {
-                    content_lines.push(Line::from(first_line.to_string()));
-                }
-                
-                // Subsequent lines are indented
-                for line in wrapped_lines.iter().skip(1) {
-                    content_lines.push(Line::from(format!("   {}", line)));
-                }
-            }
-            
+
+            content_lines.append(&mut add_colors(&mut highlighter, &exercise.code));
+
             content_lines.push(Line::from(""));
         }
-        
+
         // Create the scrollable paragraph
         let content = Paragraph::new(content_lines)
             .block(Block::default().borders(Borders::NONE))
             .scroll((app.scroll_offset, 0));
-        
+
         frame.render_widget(content, layout[1]);
     } else {
         // If no module is loaded, show a placeholder
@@ -282,7 +274,7 @@ pub fn render_learning_view(frame: &mut Frame, app: &App, layout: &[Rect]) {
             .alignment(Alignment::Center);
         frame.render_widget(placeholder, layout[1]);
     }
-    
+
     // Render footer
     let status = Paragraph::new("(n) New Module | (k/↑, j/↓) Scroll | (?) Help | (q) Quit")
         .alignment(Alignment::Center)

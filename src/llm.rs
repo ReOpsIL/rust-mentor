@@ -43,12 +43,12 @@ pub struct LlmClient {
     api_key: String,
 }
 
-// #[derive(Deserialize, Debug)]
-// pub struct RawLearningModule {
-//     pub explanation: String,
-//     pub code_snippets: String,
-//     pub exercises: String,
-// }
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct Model {
+    pub id: String,
+    pub name: String,
+}
+
 
 impl LlmClient {
     pub fn new(api_key: String) -> Self {
@@ -56,6 +56,21 @@ impl LlmClient {
             client: Client::new(),
             api_key,
         }
+    }
+
+    pub async fn list_models(&self) -> Result<Vec<Model>, Box<dyn std::error::Error>> {
+        let url = "https://openrouter.ai/api/v1/models";
+
+        let resp = self.client
+            .get(url)
+            .header("Authorization", format!("Bearer {}", self.api_key))
+            .send()
+            .await?;
+
+        let json: serde_json::Value = resp.json().await?;
+        let models: Vec<Model> = serde_json::from_value(json["data"].clone())?;
+
+        Ok(models)
     }
 
     // Generate a learning module based on a topic and user level
@@ -165,7 +180,7 @@ Source of this topic: {source}
     async fn call_openrouter_api(&self, prompt: String) -> Result<String> {
         // Create the request body
         let request = OpenRouterRequest {
-            model: "google/gemini-2.5-pro-preview".to_string(), // You can change this to a different model if needed
+            model: "google/gemma-3n-e4b-it:free".to_string(), // You can change this to a different model if needed
             messages: vec![Message {
                 role: "user".to_string(),
                 content: prompt,
@@ -204,22 +219,6 @@ Source of this topic: {source}
     // And LearningModule is the struct you want to create
 
     pub(crate) fn parse_response(&self, response: String, topic: &Topic) -> Result<LearningModule> {
-        // Check if the response is wrapped in a code block and extract the JSON
-        // let json_str = if response.trim_start().starts_with("```json")
-        //     && response.trim_end().ends_with("```")
-        // {
-        //     // Extract the content between the code block markers
-        //     let start_idx = response.find('{').unwrap_or(0);
-        //     let end_idx = response.rfind('}').unwrap_or(response.len());
-        //
-        //     if start_idx < end_idx {
-        //         &response[start_idx..=end_idx]
-        //     } else {
-        //         &response
-        //     }
-        // } else {
-        //     &response
-        // };
 
         let prompt_res = PromptResponse::parse_response(response.clone());
         match prompt_res {
