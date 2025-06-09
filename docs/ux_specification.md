@@ -81,8 +81,9 @@ The TUI will adopt a **modern, utility-focused aesthetic**. It will utilize box-
 2.  **Index Selection View:** After selecting a skill level, this screen prompts the user to choose a content source (Rust Library, Rust By Example, The Rust Programming Language, or Random).
 3.  **Loading View:** A simple, temporary view displayed during LLM API calls.
 4.  **Main Learning View:** The core screen of the application. Displays the topic, explanation, code snippets, and exercises.
-5.  **Help Modal:** An overlay that displays a list of available keybindings.
-6.  **Quit Confirmation Modal:** A simple modal to prevent accidental quitting.
+5.  **Settings View:** A screen that allows users to customize their learning experience by adjusting various options.
+6.  **Help Modal:** An overlay that displays a list of available keybindings.
+7.  **Quit Confirmation Modal:** A simple modal to prevent accidental quitting.
 
 ### **Primary Navigation Model**
 
@@ -94,11 +95,13 @@ The navigation is **modal and context-driven**, designed for simplicity and disc
 *   **View-Specific Keys:**
     *   **Level Selection:** `Up/Down` or `k/j` to change level, `Enter` to confirm.
     *   **Index Selection:** `Up/Down` or `k/j` to change content source, `Enter` to confirm.
-    *   **Main Learning View:** `n` to request a new module. `Up/Down` or `k/j` to scroll content if it overflows the viewport.
+    *   **Main Learning View:** `n` to request a new module. `s` to access settings. `Up/Down` or `k/j` to scroll content if it overflows the viewport.
+    *   **Settings View:** `Tab` to switch between settings sections. `Up/Down` or `k/j` to navigate options. `Enter/Space` to toggle or cycle selected option. `Esc` to return to previous screen.
 *   **Interaction Flow:**
     `Launch` -> `Welcome View` -> `(Select Level)` -> `Index Selection View` -> `(Select Content Source)` -> `Loading View` -> `Main Learning View`
     From `Main Learning View`:
     *   Pressing `n` -> `Loading View` -> `Main Learning View (new content)`
+    *   Pressing `s` -> `Settings View` -> `(Adjust Settings)` -> `(Press Esc)` -> `Main Learning View`
     *   Pressing `?` -> `Help Modal (overlay)` -> `(Press Esc/q)` -> `Main Learning View`
     *   Pressing `q` -> `Quit Modal (overlay)` -> `(Press Enter)` -> `Exit App`
 
@@ -196,7 +199,36 @@ The navigation is **modal and context-driven**, designed for simplicity and disc
 +--------------------------------------------------------------------------+
 ```
 
-### **Wireframe 3: Help Modal (Overlay)**
+### **Wireframe 3: Settings View**
+
+```
++--------------------------------------------------------------------------+
+| Rust AI Mentor :: Settings                                               |
++--------------------------------------------------------------------------+
+|                                                                          |
+| [Model Selection] [Learning Resources] [Content Customization]           |
+|                                                                          |
+| Learning Resources:                                                      |
+|                                                                          |
+|   [X] Show Official Documentation                                        |
+|   [X] Show Community Resources                                           |
+|   [ ] Show Crates.io Packages                                            |
+|   [X] Show GitHub Repositories                                           |
+|                                                                          |
+|                                                                          |
+|                                                                          |
+|                                                                          |
+|                                                                          |
+|                                                                          |
+|                                                                          |
+|                                                                          |
+|                                                                          |
++--------------------------------------------------------------------------+
+| (Tab) Switch Section | (k/↑, j/↓) Navigate | (Space) Toggle | (Esc) Back |
++--------------------------------------------------------------------------+
+```
+
+### **Wireframe 4: Help Modal (Overlay)**
 
 ```
 +--------------------------------------------------------------------------+
@@ -210,17 +242,17 @@ The navigation is **modal and context-driven**, designed for simplicity and disc
 |   only be one owner at a time. Whe │         Keybindings         │ |       |
 |   value will be dropped. This rule ├───────────────────────────┤ |       |
 |                                    │ n: Request New Module     │ |       |
-| ---                                │ q: Quit Application       │ |       |
-|                                    │ ?: Toggle this Help menu  │ |       |
-| Code Snippets:                     │ k,↑: Scroll Up            │ |       |
-|                                    │ j,↓: Scroll Down          │ |       |
-|   // 1. Ownership and Scope        │ Esc: Close this menu      │ |       |
-|   {                                │                           │ |       |
+| ---                                │ s: Settings               │ |       |
+|                                    │ q: Quit Application       │ |       |
+| Code Snippets:                     │ ?: Toggle this Help menu  │ |       |
+|                                    │ k,↑: Scroll Up            │ |       |
+|   // 1. Ownership and Scope        │ j,↓: Scroll Down          │ |       |
+|   {                                │ Esc: Close this menu      │ |       |
 |       let s = String::from("hello" └───────────────────────────┘ |       |
 |       // do stuff with s                                          |       |
 |   } // this scope is now over, and s is no longer valid           |       |
 |                                                                  |       |
 +------------------------------------------------------------------+-------+
-| (n) New Module | (k/↑, j/↓) Scroll | (?) Help | (q) Quit                 |
+| (n) New Module | (s) Settings | (k/↑, j/↓) Scroll | (?) Help | (q) Quit |
 +--------------------------------------------------------------------------+
 ```

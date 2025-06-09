@@ -87,6 +87,7 @@ The MVP will be developed in four distinct phases, building from the foundation 
 *   **Milestone:** **All MVP features (F001-F007) are fully functional. The application is stable, provides a polished user experience, and is ready for initial user testing.**
 
 ---
+
 #### **Phase 5: Advanced Features & Customization**
 *   **Goal:** Implement advanced features that enhance the personalization and customization of the learning experience.
 *   **Features/Tasks:**

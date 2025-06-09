@@ -12,6 +12,16 @@ RustMentor is an interactive terminal-based application designed to help users l
   - Runnable code examples with comments
   - Practice exercises to reinforce learning
 - **Random Topic Selection**: Automatically selects topics from "Rust by Example" and "The Rust Programming Language" books based on your level
+- **Content Customization**:
+  - Adjust code complexity (Simple, Moderate, Complex)
+  - Control explanation verbosity (Concise, Moderate, Detailed)
+  - Set focus area (Concepts, Code Examples, Exercises, Balanced)
+- **Learning Resources Management**:
+  - Toggle visibility of official documentation
+  - Control display of community resources
+  - Show/hide crates.io packages
+  - Enable/disable GitHub repository suggestions
+- **Settings Management**: Dedicated settings screen for customizing your learning experience
 
 ## Installation
 
@@ -43,11 +53,18 @@ RustMentor is an interactive terminal-based application designed to help users l
 3. **Navigate the learning module**:
    - Scroll up/down: Arrow keys or 'j'/'k'
    - Generate a new module: 'n'
+   - Access settings: 's'
    - Return to level selection: Esc
    - Show help: '?'
    - Quit: 'q'
 
-4. **Confirm quit**: Use left/right arrow keys to select Yes/No and press Enter.
+4. **Customize your settings**:
+   - Navigate between settings sections: Tab
+   - Navigate options: Arrow keys or 'j'/'k'
+   - Toggle or cycle selected option: Enter/Space
+   - Return to previous screen: Esc
+
+5. **Confirm quit**: Use left/right arrow keys to select Yes/No and press Enter.
 
 ## Requirements
 

@@ -15,14 +15,14 @@ use app::App;
 use event::{Event, EventHandler};
 use std::env;
 use tui::Tui;
-use crate::config::Config;
+use crate::config::ConfigService;
 
 #[tokio::main]
 async fn main() -> Result<()> {
     // Initialize logging
     tracing_subscriber::fmt::init();
 
-    Config::load().expect("Error - Could not setup configuration.");
+    ConfigService::new();
 
     // Read OPENROUTER_API_KEY environment variable
     let api_key = env::var("OPENROUTER_API_KEY").unwrap_or_else(|_| {
