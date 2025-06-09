@@ -58,7 +58,12 @@ To ensure a focused and achievable initial version, the app **will** do the foll
         *   Generate a concise explanation (5-10 lines).
         *   Provide 1-3 illustrative code snippets.
         *   Create 1-3 small exercises related to the topic.
-*   **Content Sourcing Strategy:** Initially, the LLM will be guided to generate content based on foundational learning resources like "The Rust Programming Language" book and "Rust by Example" to ensure pedagogical soundness for various levels.
+*   **Content Sourcing Strategy:** The application provides multiple content sources that users can choose from:
+    *   Rust Library Index - Standard and community libraries
+    *   Rust By Example - Examples from the Rust By Example guide
+    *   The Rust Programming Language - Topics from the official Rust book
+    *   Random - Randomly selects from any of the above sources
+    The LLM is guided to generate content based on the selected source, ensuring pedagogical soundness for various levels.
 *   **Stateless or Minimal State:** Focus on the core learning loop per session.
 
 The app **will NOT** initially include:

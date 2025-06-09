@@ -32,6 +32,20 @@ This document outlines the features for the Rust AI Mentor application, based on
       Depends on F001 for UI.
 *   **Priority:** Must-have
 
+### **Feature 2.5: Content Source Selection**
+*   **Feature ID:** F002.5
+*   **Description:** After selecting a skill level, the user is prompted to choose a content source for their learning session:
+      - Rust Library - Standard and community libraries
+      - Rust By Example - Examples from the Rust By Example guide
+      - The Rust Programming Language - Topics from the official Rust book
+      - Random - Randomly selects from any of the above sources
+*   **Purpose & User Benefit:** Provides users with more control over their learning experience by allowing them to focus on specific
+      aspects of Rust that interest them most. This enhances personalization and helps users target their learning goals more effectively.
+*   **Support for App Goals:** Enhances the "Personalized & Adaptive Learning" core value proposition by adding another dimension of customization.
+*   **Key Interactions/Dependencies:** Occurs after F002 (level selection) and before F004 (content generation). The selected source
+      determines which data index will be used for topic selection.
+*   **Priority:** Must-have
+
 ### **Feature 3: LLM Integration (OpenRouter)**
 *   **Feature ID:** F003
 *   **Description:** The application integrates with an LLM provider (initially OpenRouter) to send structured prompts
@@ -45,13 +59,17 @@ This document outlines the features for the Rust AI Mentor application, based on
 
 ### **Feature 4: AI-Powered Learning Module Generation**
 *   **Feature ID:** F004
-*   **Description:** Based on the user's selected skill level (from F002), the application prompts the LLM (via F003) to:
-    1. The application will use a pre created "rust book by example" index ( in json format ) and select a topic according to the user level selected.   
-    2. Identify a suitable Rust topic/concept appropriate for that level.
+*   **Description:** Based on the user's selected skill level (from F002) and content source, the application prompts the LLM (via F003) to:
+    1. The application will use one of the following pre-created indices (in JSON format) based on user selection:
+       - Rust Library Index - Standard and community libraries
+       - Rust By Example - Examples from the Rust By Example guide
+       - The Rust Programming Language - Topics from the official Rust book
+       - Random - Randomly selects from any of the above sources
+    2. Select a topic according to the user level selected.
     3. Generate a concise explanation (target 5-10 lines).
     4. Provide 1-3 illustrative code snippets for the topic.
     5. Create 1-3 small exercises related to the topic.
-        The LLM is guided to base content on foundational resources  "The Rust Programming Language" book and "Rust by Example."
+        The LLM is guided to base content on foundational resources appropriate to the selected source.
 *   **Purpose & User Benefit:** Delivers the core learning experience. Users receive tailored, bite-sized lessons with practical examples
       and exercises, addressing "Information Overload," "Lack of Structured Practice," and "Maintaining Momentum" by providing clear,
       progressive steps.
@@ -95,4 +113,3 @@ This document outlines the features for the Rust AI Mentor application, based on
 *   **Key Interactions/Dependencies:** Depends on F001 (UI for the request option), F002 (to maintain level context for the new request),
       and triggers F004 (AI-Powered Learning Module Generation) for a new module.
 *   **Priority:** Must-have
-

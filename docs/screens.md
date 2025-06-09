@@ -39,6 +39,33 @@ This is the initial screen the user sees upon launching the application. It prom
 +--------------------------------------------------------------------------+
 ```
 
+### **1.5. Index Selection View**
+
+This screen appears after the user selects their skill level. It allows them to choose which content source they want to learn from.
+
+```markdown
++--------------------------------------------------------------------------+
+| **Rust AI Mentor v0.1.0 :: Level 4**                                     |
++--------------------------------------------------------------------------+
+|                                                                          |
+|                **Please select a content source:**                       |
+|                                                                          |
+|                                                                          |
+|                      Rust Library                                        |
+|                      Rust By Example                                     |
+|                    > The Rust Programming Language                       |
+|                      Random                                              |
+|                                                                          |
+|                                                                          |
+|                                                                          |
+|                                                                          |
+|                    [ Press Enter to Continue ]                           |
+|                                                                          |
++--------------------------------------------------------------------------+
+| `(k/↑, j/↓)` Change Source `(?)` Help                           `(q)` Quit |
++--------------------------------------------------------------------------+
+```
+
 ### **2. Loading View**
 
 This view is displayed during asynchronous operations, such as when the application is calling the LLM API to fetch a new learning module. It provides clear feedback that the app is working.

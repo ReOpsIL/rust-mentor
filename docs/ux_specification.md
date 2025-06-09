@@ -53,32 +53,36 @@ The TUI will adopt a **modern, utility-focused aesthetic**. It will utilize box-
 
 1.  **Launch:** Alex opens his terminal and runs `rust-ai-mentor`.
 2.  **Level Select:** The **Welcome / Level Selection View** appears. The selector is focused on "5". He uses the `Down Arrow` key to move to "2" and presses `Enter`.
-3.  **Loading:** A **Loading View** appears briefly with a message: "Generating your first learning module..."
-4.  **Learn:** The **Main Learning View** is displayed with a module on "Ownership." Alex reads the content, scrolling down with `j` or `Down Arrow` if necessary.
-5.  **Request New:** After finishing, he presses `n` to request a new module.
-6.  **Loading:** The **Loading View** appears again.
-7.  **Learn Again:** The **Main Learning View** updates with a new module on "Structs."
-8.  **Help:** He forgets how to quit and presses `?`. The **Help Modal** appears, showing the keybindings. He sees `q: Quit`. He presses `Esc` to close the modal.
-9.  **Quit:** He presses `q`. A **Quit Confirmation Modal** appears. He presses `Enter` to confirm.
-10. **Exit:** The application closes and he is returned to his shell prompt.
+3.  **Index Select:** The **Index Selection View** appears. He uses the `Down Arrow` key to select "Rust By Example" and presses `Enter`.
+4.  **Loading:** A **Loading View** appears briefly with a message: "Generating your first learning module..."
+5.  **Learn:** The **Main Learning View** is displayed with a module on "Ownership." Alex reads the content, scrolling down with `j` or `Down Arrow` if necessary.
+6.  **Request New:** After finishing, he presses `n` to request a new module.
+7.  **Loading:** The **Loading View** appears again.
+8.  **Learn Again:** The **Main Learning View** updates with a new module on "Structs."
+9.  **Help:** He forgets how to quit and presses `?`. The **Help Modal** appears, showing the keybindings. He sees `q: Quit`. He presses `Esc` to close the modal.
+10. **Quit:** He presses `q`. A **Quit Confirmation Modal** appears. He presses `Enter` to confirm.
+11. **Exit:** The application closes and he is returned to his shell prompt.
 
 ### **Journey 2: Quick Topic Refresher (Priya)**
 
 1.  **Launch:** Priya runs `rust-ai-mentor`.
 2.  **Level Select:** The **Welcome / Level Selection View** appears. She uses the `Up Arrow` to select "6" and presses `Enter`.
-3.  **Learn:** The app generates and displays a module on "Traits." She reviews the code snippets, which use syntax highlighting.
-4.  **Interact:** She uses her mouse to select and copy a code snippet from the terminal to her Neovim session in another pane to experiment with it.
-5.  **Quit:** Satisfied, she presses `q`, then `Enter` to quit the application.
+3.  **Index Select:** The **Index Selection View** appears. She selects "The Rust Programming Language" and presses `Enter`.
+4.  **Loading:** The **Loading View** appears briefly.
+5.  **Learn:** The app generates and displays a module on "Traits." She reviews the code snippets, which use syntax highlighting.
+6.  **Interact:** She uses her mouse to select and copy a code snippet from the terminal to her Neovim session in another pane to experiment with it.
+7.  **Quit:** Satisfied, she presses `q`, then `Enter` to quit the application.
 
 ## 5. Key Views & Navigation Model
 
 ### **List of Views**
 
 1.  **Welcome / Level Selection View:** The initial screen. Prompts the user to select their skill level.
-2.  **Loading View:** A simple, temporary view displayed during LLM API calls.
-3.  **Main Learning View:** The core screen of the application. Displays the topic, explanation, code snippets, and exercises.
-4.  **Help Modal:** An overlay that displays a list of available keybindings.
-5.  **Quit Confirmation Modal:** A simple modal to prevent accidental quitting.
+2.  **Index Selection View:** After selecting a skill level, this screen prompts the user to choose a content source (Rust Library, Rust By Example, The Rust Programming Language, or Random).
+3.  **Loading View:** A simple, temporary view displayed during LLM API calls.
+4.  **Main Learning View:** The core screen of the application. Displays the topic, explanation, code snippets, and exercises.
+5.  **Help Modal:** An overlay that displays a list of available keybindings.
+6.  **Quit Confirmation Modal:** A simple modal to prevent accidental quitting.
 
 ### **Primary Navigation Model**
 
@@ -89,9 +93,10 @@ The navigation is **modal and context-driven**, designed for simplicity and disc
     *   `?`: Show/hide the Help Modal.
 *   **View-Specific Keys:**
     *   **Level Selection:** `Up/Down` or `k/j` to change level, `Enter` to confirm.
+    *   **Index Selection:** `Up/Down` or `k/j` to change content source, `Enter` to confirm.
     *   **Main Learning View:** `n` to request a new module. `Up/Down` or `k/j` to scroll content if it overflows the viewport.
 *   **Interaction Flow:**
-    `Launch` -> `Welcome View` -> `(Select Level)` -> `Loading View` -> `Main Learning View`
+    `Launch` -> `Welcome View` -> `(Select Level)` -> `Index Selection View` -> `(Select Content Source)` -> `Loading View` -> `Main Learning View`
     From `Main Learning View`:
     *   Pressing `n` -> `Loading View` -> `Main Learning View (new content)`
     *   Pressing `?` -> `Help Modal (overlay)` -> `(Press Esc/q)` -> `Main Learning View`

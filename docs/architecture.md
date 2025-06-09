@@ -30,18 +30,27 @@ The application is structured into three primary internal components and one ext
 *   **Application Logic / Core**
     *   **Role:** This is the heart of the application, containing the central state machine and business logic. It acts as the coordinator between the UI and other components.
     *   **Responsibilities:**
-        *   Managing the application's global state (e.g., current view, selected skill level, loaded content).
+        *   Managing the application's global state (e.g., current view, selected skill level, selected content source, loaded content).
         *   Processing user actions received from the UI layer and triggering appropriate state transitions.
         *   Orchestrating asynchronous tasks, such as fetching data from the LLM client.
         *   Handling application-level errors and updating the state accordingly.
+        *   Managing different application states:
+            * Welcome - Initial screen for level selection
+            * IndexSelection - Screen for selecting content source (Rust Library, Rust By Example, The Rust Programming Language, Random)
+            * Learning - Main screen displaying the learning content
+            * Loading - Screen shown while waiting for LLM response
+            * LevelTooLowPopup - Error screen shown when user level is too low for selected content
     *   **Technologies:** Custom Rust structs for state management, `tokio` for the async runtime and `mpsc` channels for message passing between async tasks and the main event loop.
 
 *   **Data Access Layer**
     *   **Role:** This layer is responsible for accessing data stored on the local filesystem. For the MVP, its role is limited to read-only access of pre-packaged application data.
     *   **Responsibilities:**
-        *   Loading and deserializing the `rust_by_example_index.json` file at startup.
-        *   Providing an interface for the Application Core to select a relevant topic from this index based on the user's skill level.
-    *   **Technologies:** `serde` and `serde_json` for deserializing the JSON file into Rust structs.
+        *   Loading and deserializing multiple data sources at startup:
+            * `rust_library_index.json` - Rust standard and community libraries
+            * `rust_by_example_full.json` - Rust By Example content
+            * `the_rust_programming_language.json` - The Rust Programming Language book
+        *   Providing an interface for the Application Core to select a relevant topic from these indices based on the user's skill level and chosen content source.
+    *   **Technologies:** `serde` and `serde_json` for deserializing the JSON files into Rust structs.
 
 *   **External Service Clients**
     *   **Role:** This component encapsulates all communication with external network APIs. It is responsible for making outbound requests and parsing responses.
@@ -86,7 +95,7 @@ graph TD
         D -- Fetches Content --> B
 
         B -- Requests Topic --> C[Data Access Layer<br/>(serde_json)]
-        C -- Reads From --> E[(Local Filesystem<br/>data/rust_by_example_index.json)]
+        C -- Reads From --> E[(Local Filesystem<br/>data/rust_library_index.json<br/>data/rust_by_example_full.json<br/>data/the_rust_programming_language.json)]
     end
 
     D -- HTTPS API Call --> F([External OpenRouter API])

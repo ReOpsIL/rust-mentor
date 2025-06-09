@@ -22,8 +22,8 @@ The selection of technologies is focused on community support, performance, cros
     *   **Reasoning:** The LLM integration (F003) is an I/O-bound network operation, making an asynchronous approach essential to prevent the UI from freezing. `tokio` is the industry-standard async runtime in Rust. We will use a main event loop that polls for both terminal events and results from async tasks (like LLM responses), likely managed through `tokio::mpsc` channels. A simple state machine implemented in an `App` struct will manage the application's current view (e.g., `Welcome`, `Learning`, `Help`). `anyhow` will be used for application-level error handling, and `thiserror` for creating specific, typed errors where needed (e.g., for LLM client interactions).
 
 *   **Data & Configuration:**
-    *   **Crates:** `serde` & `serde_json` (for topic index), `config-rs` and native rust (for API keys).
-    *   **Reasoning:** Per feature F004, we will use a pre-created JSON index of topics from "Rust by Example". `serde` and `serde_json` are the perfect tools for deserializing this file into Rust structs at startup. For managing the OpenRouter API key use environment variables with native rust.
+    *   **Crates:** `serde` & `serde_json` (for topic indices), native rust (for API keys).
+    *   **Reasoning:** Per feature F004, we will use pre-created JSON indices of topics from multiple sources: Rust libraries, "Rust by Example", and "The Rust Programming Language" book. `serde` and `serde_json` are the perfect tools for deserializing these files into Rust structs at startup. For managing the OpenRouter API key, we use environment variables with native rust.
 
 *   **Key Supporting Crates:**
     *   **HTTP Client:** `reqwest` - A high-level, ergonomic async HTTP client built on `tokio`, perfect for interacting with the OpenRouter API.
@@ -116,16 +116,23 @@ rust-ai-mentor/
 │   └── config.toml
 ├── .env.example        # Template for API keys
 ├── data/
-│   └── rust_by_example_index.json # Topic index for LLM prompts
+│   ├── rust_library_index.json      # Rust libraries topic index
+│   ├── rust_by_example_full.json    # Rust By Example content
+│   └── the_rust_programming_language.json # The Rust Programming Language book content
 ├── src/
-│   ├── components/       # Reusable UI widgets (e.g., level_selector.rs)
+│   ├── bin/            # Binary executables
+│   ├── components/     # Reusable UI widgets (e.g., level_selector.rs)
 │   │   └── mod.rs
-│   ├── app.rs            # Core application state machine and logic
-│   ├── event.rs          # Event handling (terminal events, ticks)
-│   ├── llm.rs            # LLM client, prompt generation, API interaction
-│   ├── tui.rs            # Terminal initialization, restoration, and main loop
-│   ├── ui.rs             # TUI rendering logic (maps state to ratatui widgets)
-│   └── main.rs           # Entry point: sets up logging, app, and starts TUI
+│   ├── app.rs          # Core application state machine and logic
+│   ├── cargo_project.rs # Cargo project management
+│   ├── config.rs       # Configuration management
+│   ├── data.rs         # Data loading and management
+│   ├── event.rs        # Event handling (terminal events, ticks)
+│   ├── llm.rs          # LLM client, prompt generation, API interaction
+│   ├── prompt_response.rs # Structured response parsing
+│   ├── tui.rs          # Terminal initialization, restoration, and main loop
+│   ├── ui.rs           # TUI rendering logic (maps state to ratatui widgets)
+│   └── main.rs         # Entry point: sets up logging, app, and starts TUI
 └── Cargo.toml
 ```
 

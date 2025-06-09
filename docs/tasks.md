@@ -23,24 +23,103 @@
     *   `mkdir -p src/components`
     *   `mkdir data`
 6.  **[Task 0.6]** Create the empty module file for UI components: `touch src/components/mod.rs`.
-7.  **[Task 0.7]** Create the data file `data/rust_by_example_index.json`. Populate it with a JSON array. Each object in the array must have the fields `topic` (string), `source` (string, e.g., "RBE Chapter X.Y"), and `min_level` (number, 1-10). This structure supports feature **F004**.
-    *Example content for `data/rust_by_example_index.json`*:
+7.  **[Task 0.7]** Create the following data files:
+
+    a. `data/rust_library_index.json` - For Rust standard and community libraries
+    *Example content for `data/rust_library_index.json`*:
     ```json
     [
-      { "topic": "Variable Bindings and Mutability", "source": "RBE 1.2", "min_level": 1 },
-      { "topic": "Basic Data Types (Primitives)", "source": "RBE 2.1", "min_level": 1 },
-      { "topic": "Structs", "source": "RBE 4.1", "min_level": 2 },
-      { "topic": "Enums and `match` expressions", "source": "RBE 4.2", "min_level": 3 },
-      { "topic": "Ownership and Move Semantics", "source": "The Book Ch 4.1", "min_level": 4 },
-      { "topic": "Borrowing and References", "source": "The Book Ch 4.2", "min_level": 4 },
-      { "topic": "Generic Functions", "source": "RBE 8.1", "min_level": 5 },
-      { "topic": "Traits", "source": "RBE 8.3", "min_level": 6 },
-      { "topic": "Error Handling with `Result`", "source": "RBE 18.2", "min_level": 6 },
-      { "topic": "Lifetimes", "source": "RBE 9.1", "min_level": 7 },
-      { "topic": "Closures", "source": "RBE 11.1", "min_level": 7 },
-      { "topic": "Basic Concurrency with Threads", "source": "The Book Ch 16.1", "min_level": 8 }
+      { "library_name": "std::collections::HashMap", "description": "A hash map implementation", "programmer_level": 3 },
+      { "library_name": "std::vec::Vec", "description": "A contiguous growable array type", "programmer_level": 1 },
+      { "library_name": "std::string::String", "description": "A UTF-8 encoded, growable string", "programmer_level": 1 },
+      { "library_name": "std::option::Option", "description": "Type representing optional values", "programmer_level": 2 },
+      { "library_name": "std::result::Result", "description": "Type for returning and propagating errors", "programmer_level": 3 }
     ]
     ```
+
+    b. `data/rust_by_example_full.json` - For Rust By Example content
+    *Example content for `data/rust_by_example_full.json`*:
+    ```json
+    {
+      "book": {
+        "chapters": [
+          {
+            "title": "Hello World",
+            "sections": [
+              {
+                "title": "Comments",
+                "section_number": "1.1",
+                "min_level": 1
+              },
+              {
+                "title": "Formatted Print",
+                "section_number": "1.2",
+                "min_level": 1
+              }
+            ]
+          },
+          {
+            "title": "Primitives",
+            "sections": [
+              {
+                "title": "Literals and Operators",
+                "section_number": "2.1",
+                "min_level": 1
+              },
+              {
+                "title": "Tuples",
+                "section_number": "2.2",
+                "min_level": 2
+              }
+            ]
+          }
+        ]
+      }
+    }
+    ```
+
+    c. `data/the_rust_programming_language.json` - For The Rust Programming Language book
+    *Example content for `data/the_rust_programming_language.json`*:
+    ```json
+    {
+      "book": {
+        "chapters": [
+          {
+            "title": "Getting Started",
+            "sections": [
+              {
+                "title": "Installation",
+                "section_number": "1.1",
+                "min_level": 1
+              },
+              {
+                "title": "Hello, World!",
+                "section_number": "1.2",
+                "min_level": 1
+              }
+            ]
+          },
+          {
+            "title": "Common Programming Concepts",
+            "sections": [
+              {
+                "title": "Variables and Mutability",
+                "section_number": "3.1",
+                "min_level": 1
+              },
+              {
+                "title": "Data Types",
+                "section_number": "3.2",
+                "min_level": 1
+              }
+            ]
+          }
+        ]
+      }
+    }
+    ```
+
+    These data files support feature **F004** by providing multiple content sources for the application.
 8.  **[Task 0.8]** Read OPENROUTER_API_KEY  environment variable  when the application loads.
 
 ---
@@ -67,11 +146,15 @@
     ```rust
     // src/main.rs
     mod app;
+    mod components;
+    mod data;
     mod event;
+    mod llm;
     mod tui;
     mod ui;
-    mod components;
-    mod llm;
+    mod prompt_response;
+    mod config;
+    mod cargo_project;
 
     use anyhow::Result;
     use app::App;
@@ -199,7 +282,7 @@
     // src/app.rs
     use anyhow::Result;
     use crossterm::event::{KeyEvent, KeyCode};
-    
+
     pub struct App {
         pub is_running: bool,
     }
@@ -249,8 +332,10 @@
     // In src/app.rs, update the App struct and add AppState
     pub enum AppState {
         Welcome,
+        IndexSelection,
         Learning,
         Loading,
+        LevelTooLowPopup,
     }
 
     pub struct App {
@@ -300,7 +385,7 @@
             KeyCode::Char('?') => self.show_help = true,
             _ => {}
         }
-        
+
         // Context-specific keybindings
         match self.current_state {
             AppState::Welcome => self.handle_welcome_keys(key_event),
@@ -364,7 +449,7 @@
             AppState::Learning => render_learning(app, frame, main_layout[1]),
             AppState::Loading => render_loading(app, frame, main_layout[1]),
         }
-        
+
         // Render modals over everything else
         if app.show_help {
             render_help_modal(frame);
@@ -402,7 +487,7 @@
     ```rust
     // src/llm.rs
     use serde::Deserialize;
-    
+
     #[derive(Debug, Deserialize, Clone)]
     pub struct LearningModule {
         pub topic: String,
