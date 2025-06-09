@@ -29,8 +29,10 @@ pub fn render(frame: &mut Frame, app: &App) {
     // Render main content based on state
     match app.current_state {
         AppState::Welcome => render_welcome_view(frame, app, &main_layout),
+        AppState::IndexSelection => render_index_selection_view(frame, app, &main_layout),
         AppState::Learning => render_learning_view(frame, app, &main_layout),
         AppState::Loading => render_loading_view(frame, app, &main_layout),
+        AppState::LevelTooLowPopup => render_welcome_view(frame, app, &main_layout), // Render welcome view in background
     }
 
     // Render modals over everything else
@@ -39,6 +41,9 @@ pub fn render(frame: &mut Frame, app: &App) {
     }
     if app.show_quit_confirmation {
         render_quit_modal(frame, app);
+    }
+    if let AppState::LevelTooLowPopup = app.current_state {
+        render_level_too_low_popup(frame);
     }
 }
 
@@ -282,6 +287,80 @@ pub fn render_learning_view(frame: &mut Frame, app: &App, layout: &[Rect]) {
     frame.render_widget(status, layout[2]);
 }
 
+pub fn render_index_selection_view(frame: &mut Frame, app: &App, layout: &[Rect]) {
+    // Render title bar
+    let title = Paragraph::new(format!("Rust AI Mentor :: Level {}", app.selected_level))
+        .style(
+            Style::default()
+                .fg(Color::LightYellow)
+                .add_modifier(Modifier::BOLD),
+        )
+        .block(Block::default().borders(Borders::BOTTOM));
+    frame.render_widget(title, layout[0]);
+
+    // Create a centered layout for the index selection
+    let selection_layout = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Percentage(30),
+            Constraint::Length(10), // Index selection options
+            Constraint::Percentage(30),
+        ])
+        .split(layout[1]);
+
+    // Create index selection list
+    let mut index_lines = Vec::new();
+
+    // Add title
+    index_lines.push(Line::from(vec![Span::styled(
+        "Select Learning Index:",
+        Style::default().add_modifier(Modifier::BOLD),
+    )]));
+    index_lines.push(Line::from(""));
+
+    // Add options
+    let options = [
+        "Rust Library Index (libraries like tokio, serde, etc.)",
+        "Rust By Example Index (examples from Rust By Example)",
+        "Rust Programming Language Index (topics from The Book)",
+        "Random (select randomly from available indexes)",
+    ];
+
+    for (i, option) in options.iter().enumerate() {
+        let line = if i == app.index_selection_cursor {
+            // Selected option
+            Line::from(vec![Span::styled(
+                format!("> {}", option),
+                Style::default().fg(Color::Black).bg(Color::LightYellow),
+            )])
+        } else {
+            // Unselected option
+            Line::from(vec![Span::raw(format!("  {}", option))])
+        };
+        index_lines.push(line);
+    }
+
+    let indexes = Paragraph::new(index_lines).alignment(Alignment::Center);
+    frame.render_widget(indexes, selection_layout[1]);
+
+    // Render footer
+    let footer_spans = vec![
+        Span::raw("(k/↑, j/↓) Change Selection | (Enter) Confirm | (Esc) Back"),
+        Span::raw("(?) Help | (q) Quit"),
+    ];
+
+    let footer_line = Line::from(footer_spans);
+    let status = Paragraph::new(footer_line)
+        .alignment(Alignment::Center)
+        .style(
+            Style::default()
+                .fg(Color::LightYellow)
+                .add_modifier(Modifier::BOLD),
+        )
+        .block(Block::default().borders(Borders::TOP));
+    frame.render_widget(status, layout[2]);
+}
+
 pub fn render_loading_view(frame: &mut Frame, app: &App, layout: &[Rect]) {
     // Render title bar (same as learning view)
     let title = Paragraph::new(format!("Rust AI Mentor :: Level {}", app.selected_level))
@@ -344,7 +423,12 @@ pub fn render_help_modal(frame: &mut Frame) {
         Line::from(""),
         Line::from("Welcome Screen:"),
         Line::from("  k/↑, j/↓ - Change level"),
-        Line::from("  Enter - Start learning"),
+        Line::from("  Enter - Proceed to index selection"),
+        Line::from(""),
+        Line::from("Index Selection Screen:"),
+        Line::from("  k/↑, j/↓ - Change selection"),
+        Line::from("  Enter - Confirm selection and generate module"),
+        Line::from("  Esc - Return to welcome screen"),
         Line::from(""),
         Line::from("Learning Screen:"),
         Line::from("  k/↑, j/↓ - Scroll content"),
@@ -402,6 +486,27 @@ pub fn render_quit_modal(frame: &mut Frame, app: &App) {
     );
 
     render_modal(frame, area, quit_content);
+}
+
+pub fn render_level_too_low_popup(frame: &mut Frame) {
+    // Calculate a small centered rect for the modal
+    let area = centered_rect(60, 20, frame.size());
+
+    // Create the level too low content
+    let content = Paragraph::new(vec![
+        Line::from("For library subject - you need to be a level 3 programmer (or higher)"),
+        Line::from(""),
+        Line::from("Returning to programmer level selection..."),
+    ])
+    .alignment(Alignment::Center)
+    .block(
+        Block::default()
+            .title("Level Too Low")
+            .borders(Borders::ALL)
+            .border_type(BorderType::Rounded),
+    );
+
+    render_modal(frame, area, content);
 }
 
 // Helper function to create a centered rect

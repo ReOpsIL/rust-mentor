@@ -1,0 +1,1052 @@
+[
+  {
+    "library_name": "tokio",
+    "description": "An asynchronous runtime for Rust, providing tools for building fast, reliable network applications using async/await.",
+    "programmer_level": 6,
+    "programmer_level_description": "Advanced Intermediate"
+  },
+  {
+    "library_name": "anyhow",
+    "description": "A flexible error type for simplified error handling in Rust applications.",
+    "programmer_level": 3,
+    "programmer_level_description": "Early Intermediate"
+  },
+  {
+    "library_name": "clap",
+    "description": "A full-featured command-line argument parser for building CLI applications.",
+    "programmer_level": 4,
+    "programmer_level_description": "Intermediate"
+  },
+  {
+    "library_name": "serde",
+    "description": "A serialization and deserialization framework for converting Rust data structures to various formats like JSON or YAML.",
+    "programmer_level": 4,
+    "programmer_level_description": "Intermediate"
+  },
+  {
+    "library_name": "rayon",
+    "description": "A data-parallelism library for parallelizing computations across multiple cores.",
+    "programmer_level": 5,
+    "programmer_level_description": "Solid Intermediate"
+  },
+  {
+    "library_name": "actix-web",
+    "description": "A powerful web framework for building concurrent, actor-based web applications.",
+    "programmer_level": 6,
+    "programmer_level_description": "Advanced Intermediate"
+  },
+  {
+    "library_name": "hyper",
+    "description": "A fast, low-level HTTP library for building web servers and clients.",
+    "programmer_level": 6,
+    "programmer_level_description": "Advanced Intermediate"
+  },
+  {
+    "library_name": "rocket",
+    "description": "A web framework focused on ease-of-use, type safety, and security for building web applications.",
+    "programmer_level": 5,
+    "programmer_level_description": "Solid Intermediate"
+  },
+  {
+    "library_name": "reqwest",
+    "description": "A high-level HTTP client for making web requests with async support.",
+    "programmer_level": 4,
+    "programmer_level_description": "Intermediate"
+  },
+  {
+    "library_name": "rand",
+    "description": "A random number generation library with various distributions and RNGs.",
+    "programmer_level": 3,
+    "programmer_level_description": "Early Intermediate"
+  },
+  {
+    "library_name": "thiserror",
+    "description": "A library for deriving custom error types with minimal boilerplate.",
+    "programmer_level": 4,
+    "programmer_level_description": "Intermediate"
+  },
+  {
+    "library_name": "log",
+    "description": "A lightweight logging facade for Rust applications.",
+    "programmer_level": 2,
+    "programmer_level_description": "Beginner"
+  },
+  {
+    "library_name": "env_logger",
+    "description": "A logging implementation that directs logs to stderr with customizable formatting.",
+    "programmer_level": 3,
+    "programmer_level_description": "Early Intermediate"
+  },
+  {
+    "library_name": "chrono",
+    "description": "A library for date and time manipulation, including parsing and formatting.",
+    "programmer_level": 4,
+    "programmer_level_description": "Intermediate"
+  },
+  {
+    "library_name": "regex",
+    "description": "A regular expression library for pattern matching in strings.",
+    "programmer_level": 4,
+    "programmer_level_description": "Intermediate"
+  },
+  {
+    "library_name": "lazy_static",
+    "description": "A macro for declaring lazily evaluated statics in Rust.",
+    "programmer_level": 4,
+    "programmer_level_description": "Intermediate"
+  },
+  {
+    "library_name": "futures",
+    "description": "A library providing utilities for asynchronous programming with futures.",
+    "programmer_level": 6,
+    "programmer_level_description": "Advanced Intermediate"
+  },
+  {
+    "library_name": "nom",
+    "description": "A parser combinator library for creating safe, efficient parsers.",
+    "programmer_level": 7,
+    "programmer_level_description": "Early Advanced"
+  },
+  {
+    "library_name": "rustls",
+    "description": "A modern TLS library written in Rust, focusing on security and performance.",
+    "programmer_level": 7,
+    "programmer_level_description": "Early Advanced"
+  },
+  {
+    "library_name": "diesel",
+    "description": "A safe, extensible ORM and query builder for SQL databases.",
+    "programmer_level": 6,
+    "programmer_level_description": "Advanced Intermediate"
+  },
+  {
+    "library_name": "sqlx",
+    "description": "An async SQL database library with compile-time query checking.",
+    "programmer_level": 6,
+    "programmer_level_description": "Advanced Intermediate"
+  },
+  {
+    "library_name": "serde_json",
+    "description": "A library for serializing and deserializing JSON data with Serde.",
+    "programmer_level": 4,
+    "programmer_level_description": "Intermediate"
+  },
+  {
+    "library_name": "tracing",
+    "description": "A framework for instrumenting Rust programs with context-aware logging.",
+    "programmer_level": 5,
+    "programmer_level_description": "Solid Intermediate"
+  },
+  {
+    "library_name": "axum",
+    "description": "A web framework built on top of hyper, focusing on ergonomics and modularity.",
+    "programmer_level": 6,
+    "programmer_level_description": "Advanced Intermediate"
+  },
+  {
+    "library_name": "parking_lot",
+    "description": "Compact and efficient implementations of synchronization primitives like mutexes.",
+    "programmer_level": 6,
+    "programmer_level_description": "Advanced Intermediate"
+  },
+  {
+    "library_name": "byteorder",
+    "description": "A library for handling endianness when reading and writing binary data.",
+    "programmer_level": 4,
+    "programmer_level_description": "Intermediate"
+  },
+  {
+    "library_name": "crossbeam",
+    "description": "A set of tools for concurrent programming, including channels and thread scopes.",
+    "programmer_level": 6,
+    "programmer_level_description": "Advanced Intermediate"
+  },
+  {
+    "library_name": "image",
+    "description": "A library for image processing, including encoding and decoding various formats.",
+    "programmer_level": 4,
+    "programmer_level_description": "Intermediate"
+  },
+  {
+    "library_name": "uuid",
+    "description": "A library for generating and parsing UUIDs (Universally Unique Identifiers).",
+    "programmer_level": 3,
+    "programmer_level_description": "Early Intermediate"
+  },
+  {
+    "library_name": "structopt",
+    "description": "A library for parsing command-line arguments using derive macros.",
+    "programmer_level": 4,
+    "programmer_level_description": "Intermediate"
+  },
+  {
+    "library_name": "indicatif",
+    "description": "A library for creating progress bars and spinners for CLI applications.",
+    "programmer_level": 3,
+    "programmer_level_description": "Early Intermediate"
+  },
+  {
+    "library_name": "tokio-stream",
+    "description": "Utilities for working with async streams in Tokio-based applications.",
+    "programmer_level": 6,
+    "programmer_level_description": "Advanced Intermediate"
+  },
+  {
+    "library_name": "serde_yaml",
+    "description": "A library for serializing and deserializing YAML data with Serde.",
+    "programmer_level": 4,
+    "programmer_level_description": "Intermediate"
+  },
+  {
+    "library_name": "once_cell",
+    "description": "Provides types for safe, one-time initialization of static data.",
+    "programmer_level": 5,
+    "programmer_level_description": "Solid Intermediate"
+  },
+  {
+    "library_name": "async-std",
+    "description": "An async runtime alternative to Tokio, providing simpler async programming primitives.",
+    "programmer_level": 6,
+    "programmer_level_description": "Advanced Intermediate"
+  },
+  {
+    "library_name": "itertools",
+    "description": "Extra iterator utilities for working with collections in Rust.",
+    "programmer_level": 4,
+    "programmer_level_description": "Intermediate"
+  },
+  {
+    "library_name": "proc-macro2",
+    "description": "A library for writing procedural macros, requiring understanding of Rust’s compiler internals.",
+    "programmer_level": 8,
+    "programmer_level_description": "Advanced"
+  },
+  {
+    "library_name": "quote",
+    "description": "A library for generating Rust code in procedural macros.",
+    "programmer_level": 8,
+    "programmer_level_description": "Advanced"
+  },
+  {
+    "library_name": "syn",
+    "description": "A parsing library for Rust code, commonly used in procedural macros.",
+    "programmer_level": 8,
+    "programmer_level_description": "Advanced"
+  },
+  {
+    "library_name": "nalgebra",
+    "description": "A linear algebra library for mathematical computations like matrices and vectors.",
+    "programmer_level": 6,
+    "programmer_level_description": "Advanced Intermediate"
+  },
+  {
+    "library_name": "bevy",
+    "description": "A data-driven game engine for building 2D and 3D games.",
+    "programmer_level": 7,
+    "programmer_level_description": "Early Advanced"
+  },
+  {
+    "library_name": "rusoto",
+    "description": "A library for interacting with AWS services using async clients.",
+    "programmer_level": 6,
+    "programmer_level_description": "Advanced Intermediate"
+  },
+  {
+    "library_name": "warp",
+    "description": "A composable, async web server framework with a functional programming style.",
+    "programmer_level": 6,
+    "programmer_level_description": "Advanced Intermediate"
+  },
+  {
+    "library_name": "plotlib",
+    "description": "A plotting library for creating visualizations like matplotlib in Python.",
+    "programmer_level": 5,
+    "programmer_level_description": "Solid Intermediate"
+  },
+  {
+    "library_name": "pyo3",
+    "description": "Bindings for writing Python extensions in Rust.",
+    "programmer_level": 7,
+    "programmer_level_description": "Early Advanced"
+  },
+  {
+    "library_name": "rkyv",
+    "description": "A zero-copy deserialization framework for high-performance data processing.",
+    "programmer_level": 7,
+    "programmer_level_description": "Early Advanced"
+  },
+  {
+    "library_name": "sled",
+    "description": "An embedded key-value database with ACID transactions.",
+    "programmer_level": 6,
+    "programmer_level_description": "Advanced Intermediate"
+  },
+  {
+    "library_name": "tokio-tungstenite",
+    "description": "A WebSocket library built on Tokio for async WebSocket connections.",
+    "programmer_level": 6,
+    "programmer_level_description": "Advanced Intermediate"
+  },
+  {
+    "library_name": "crossbeam-channel",
+    "description": "Multi-producer, multi-consumer channels for concurrent programming.",
+    "programmer_level": 6,
+    "programmer_level_description": "Advanced Intermediate"
+  },
+  {
+    "library_name": "num-traits",
+    "description": "A collection of numeric traits for generic mathematics in Rust.",
+    "programmer_level": 5,
+    "programmer_level_description": "Solid Intermediate"
+  },
+  {
+    "library_name": "num-derive",
+    "description": "Procedural macros for deriving numeric traits from num-traits.",
+    "programmer_level": 6,
+    "programmer_level_description": "Advanced Intermediate"
+  },
+  {
+    "library_name": "smallvec",
+    "description": "A vector type optimized for small sizes, storing elements inline when possible.",
+    "programmer_level": 5,
+    "programmer_level_description": "Solid Intermediate"
+  },
+  {
+    "library_name": "bitflags",
+    "description": "A macro for defining type-safe bit flags for enums.",
+    "programmer_level": 4,
+    "programmer_level_description": "Intermediate"
+  },
+  {
+    "library_name": "flate2",
+    "description": "Bindings for zlib, providing compression and decompression functionality.",
+    "programmer_level": 4,
+    "programmer_level_description": "Intermediate"
+  },
+  {
+    "library_name": "ring",
+    "description": "A cryptographic library for secure operations, optimized for IoT devices.",
+    "programmer_level": 7,
+    "programmer_level_description": "Early Advanced"
+  },
+  {
+    "library_name": "sha2",
+    "description": "Implementation of SHA-2 cryptographic hash functions.",
+    "programmer_level": 6,
+    "programmer_level_description": "Advanced Intermediate"
+  },
+  {
+    "library_name": "blake3",
+    "description": "A fast, secure cryptographic hash function with SIMD optimizations.",
+    "programmer_level": 6,
+    "programmer_level_description": "Advanced Intermediate"
+  },
+  {
+    "library_name": "hmac",
+    "description": "A library for HMAC (Hash-based Message Authentication Code) computations.",
+    "programmer_level": 6,
+    "programmer_level_description": "Advanced Intermediate"
+  },
+  {
+    "library_name": "jsonwebtoken",
+    "description": "A library for encoding and decoding JSON Web Tokens (JWT).",
+    "programmer_level": 5,
+    "programmer_level_description": "Solid Intermediate"
+  },
+  {
+    "library_name": "serde_derive",
+    "description": "Macros for deriving Serialize and Deserialize traits for Serde.",
+    "programmer_level": 4,
+    "programmer_level_description": "Intermediate"
+  },
+  {
+    "library_name": "toml",
+    "description": "A library for parsing and serializing TOML configuration files.",
+    "programmer_level": 4,
+    "programmer_level_description": "Intermediate"
+  },
+  {
+    "library_name": "csv",
+    "description": "A fast and flexible CSV reader and writer for Rust.",
+    "programmer_level": 4,
+    "programmer_level_description": "Intermediate"
+  },
+  {
+    "library_name": "pretty_assertions",
+    "description": "Enhanced assertion macros for better test failure output.",
+    "programmer_level": 3,
+    "programmer_level_description": "Early Intermediate"
+  },
+  {
+    "library_name": "mockall",
+    "description": "A library for creating mock objects in Rust for testing.",
+    "programmer_level": 5,
+    "programmer_level_description": "Solid Intermediate"
+  },
+  {
+    "library_name": "tempfile",
+    "description": "A library for creating temporary files and directories.",
+    "programmer_level": 3,
+    "programmer_level_description": "Early Intermediate"
+  },
+  {
+    "library_name": "fs_extra",
+    "description": "Extended filesystem utilities for copying, moving, and removing files.",
+    "programmer_level": 3,
+    "programmer_level_description": "Early Intermediate"
+  },
+  {
+    "library_name": "walkdir",
+    "description": "A library for recursively walking directory trees.",
+    "programmer_level": 4,
+    "programmer_level_description": "Intermediate"
+  },
+  {
+    "library_name": "notify",
+    "description": "A cross-platform filesystem notification library.",
+    "programmer_level": 5,
+    "programmer_level_description": "Solid Intermediate"
+  },
+  {
+    "library_name": "async-trait",
+    "description": "A macro for defining async trait methods in Rust.",
+    "programmer_level": 6,
+    "programmer_level_description": "Advanced Intermediate"
+  },
+  {
+    "library_name": "tower",
+    "description": "A library for building modular, composable async middleware for network services.",
+    "programmer_level": 7,
+    "programmer_level_description": "Early Advanced"
+  },
+  {
+    "library_name": "http",
+    "description": "A library providing types for HTTP requests and responses.",
+    "programmer_level": 5,
+    "programmer_level_description": "Solid Intermediate"
+  },
+  {
+    "library_name": "serde_urlencoded",
+    "description": "A library for serializing and deserializing URL-encoded data with Serde.",
+    "programmer_level": 4,
+    "programmer_level_description": "Intermediate"
+  },
+  {
+    "library_name": "bytes",
+    "description": "A utility library for working with byte arrays and buffers.",
+    "programmer_level": 5,
+    "programmer_level_description": "Solid Intermediate"
+  },
+  {
+    "library_name": "mio",
+    "description": "A low-level I/O library for non-blocking network operations.",
+    "programmer_level": 7,
+    "programmer_level_description": "Early Advanced"
+  },
+  {
+    "library_name": "slab",
+    "description": "A pre-allocated storage for indexed data, optimized for performance.",
+    "programmer_level": 5,
+    "programmer_level_description": "Solid Intermediate"
+  },
+  {
+    "library_name": "hashbrown",
+    "description": "A high-performance hash map and set implementation.",
+    "programmer_level": 5,
+    "programmer_level_description": "Solid Intermediate"
+  },
+  {
+    "library_name": "indexmap",
+    "description": "A hash map that preserves insertion order of keys.",
+    "programmer_level": 4,
+    "programmer_level_description": "Intermediate"
+  },
+  {
+    "library_name": "dashmap",
+    "description": "A concurrent hash map with high performance for multi-threaded applications.",
+    "programmer_level": 6,
+    "programmer_level_description": "Advanced Intermediate"
+  },
+  {
+    "library_name": "parking_lot_core",
+    "description": "Core primitives for the parking_lot crate, used for synchronization.",
+    "programmer_level": 6,
+    "programmer_level_description": "Advanced Intermediate"
+  },
+  {
+    "library_name": "atomic",
+    "description": "A library for atomic operations in Rust, useful for low-level concurrency.",
+    "programmer_level": 7,
+    "programmer_level_description": "Early Advanced"
+  },
+  {
+    "library_name": "crossbeam-queue",
+    "description": "Concurrent queues for thread-safe data sharing.",
+    "programmer_level": 6,
+    "programmer_level_description": "Advanced Intermediate"
+  },
+  {
+    "library_name": "crossbeam-utils",
+    "description": "Utility functions for concurrent programming from the crossbeam crate.",
+    "programmer_level": 6,
+    "programmer_level_description": "Advanced Intermediate"
+  },
+  {
+    "library_name": "futures-util",
+    "description": "Utility functions for working with futures in async programming.",
+    "programmer_level": 6,
+    "programmer_level_description": "Advanced Intermediate"
+  },
+  {
+    "library_name": "pin-project",
+    "description": "A library for safe pinning of data in async contexts.",
+    "programmer_level": 7,
+    "programmer_level_description": "Early Advanced"
+  },
+  {
+    "library_name": "async-channel",
+    "description": "Asynchronous channels for message passing in async programs.",
+    "programmer_level": 6,
+    "programmer_level_description": "Advanced Intermediate"
+  },
+  {
+    "library_name": "smol",
+    "description": "A lightweight async runtime for small-scale async applications.",
+    "programmer_level": 6,
+    "programmer_level_description": "Advanced Intermediate"
+  },
+  {
+    "library_name": "num",
+    "description": "A collection of numeric types and traits for mathematical operations.",
+    "programmer_level": 5,
+    "programmer_level_description": "Solid Intermediate"
+  },
+  {
+    "library_name": "num-bigint",
+    "description": "Arbitrary-precision integer arithmetic for Rust.",
+    "programmer_level": 5,
+    "programmer_level_description": "Solid Intermediate"
+  },
+  {
+    "library_name": "num-complex",
+    "description": "Complex number operations for mathematical computations.",
+    "programmer_level": 5,
+    "programmer_level_description": "Solid Intermediate"
+  },
+  {
+    "library_name": "rand_core",
+    "description": "Core traits and utilities for random number generation.",
+    "programmer_level": 4,
+    "programmer_level_description": "Intermediate"
+  },
+  {
+    "library_name": "rand_distr",
+    "description": "Probability distributions for the rand crate.",
+    "programmer_level": 4,
+    "programmer_level_description": "Intermediate"
+  },
+  {
+    "library_name": "rand_pcg",
+    "description": "PCG random number generator implementation for the rand crate.",
+    "programmer_level": 4,
+    "programmer_level_description": "Intermediate"
+  },
+  {
+    "library_name": "rand_xoshiro",
+    "description": "Xoshiro random number generator implementation for the rand crate.",
+    "programmer_level": 4,
+    "programmer_level_description": "Intermediate"
+  },
+  {
+    "library_name": "time",
+    "description": "A high-precision time library, alternative to chrono.",
+    "programmer_level": 4,
+    "programmer_level_description": "Intermediate"
+  },
+  {
+    "library_name": "instant",
+    "description": "A lightweight library for measuring time without system clock dependencies.",
+    "programmer_level": 4,
+    "programmer_level_description": "Intermediate"
+  },
+  {
+    "library_name": "serde_with",
+    "description": "Custom Serde serialization utilities for complex data types.",
+    "programmer_level": 5,
+    "programmer_level_description": "Solid Intermediate"
+  },
+  {
+    "library_name": "bincode",
+    "description": "A binary serialization format for compact data encoding.",
+    "programmer_level": 4,
+    "programmer_level_description": "Intermediate"
+  },
+  {
+    "library_name": "cbor",
+    "description": "A library for encoding and decoding CBOR (Concise Binary Object Representation).",
+    "programmer_level": 4,
+    "programmer_level_description": "Intermediate"
+  },
+  {
+    "library_name": "prost",
+    "description": "A Protocol Buffers implementation for Rust.",
+    "programmer_level": 6,
+    "programmer_level_description": "Advanced Intermediate"
+  },
+  {
+    "library_name": "tonic",
+    "description": "A gRPC framework for Rust, built on top of prost and Tokio.",
+    "programmer_level": 7,
+    "programmer_level_description": "Early Advanced"
+  },
+  {
+    "library_name": "reqwest-middleware",
+    "description": "Middleware for reqwest to add retries and other request enhancements.",
+    "programmer_level": 5,
+    "programmer_level_description": "Solid Intermediate"
+  },
+  {
+    "library_name": "serde_qs",
+    "description": "A library for serializing and deserializing query strings with Serde.",
+    "programmer_level": 4,
+    "programmer_level_description": "Intermediate"
+  },
+  {
+    "library_name": "url",
+    "description": "A library for parsing and manipulating URLs.",
+    "programmer_level": 4,
+    "programmer_level_description": "Intermediate"
+  },
+  {
+    "library_name": "base64",
+    "description": "A library for encoding and decoding Base64 data.",
+    "programmer_level": 3,
+    "programmer_level_description": "Early Intermediate"
+  },
+  {
+    "library_name": "hex",
+    "description": "A library for encoding and decoding hexadecimal data.",
+    "programmer_level": 3,
+    "programmer_level_description": "Early Intermediate"
+  },
+  {
+    "library_name": "flate2",
+    "description": "Bindings for zlib, providing compression and decompression functionality.",
+    "programmer_level": 4,
+    "programmer_level_description": "Intermediate"
+  },
+  {
+    "library_name": "zstd",
+    "description": "Bindings for Zstandard compression, offering high compression ratios.",
+    "programmer_level": 4,
+    "programmer_level_description": "Intermediate"
+  },
+  {
+    "library_name": "bzip2",
+    "description": "Bindings for bzip2 compression and decompression.",
+    "programmer_level": 4,
+    "programmer_level_description": "Intermediate"
+  },
+  {
+    "library_name": "flate2",
+    "description": "Bindings for zlib, providing compression and decompression functionality.",
+    "programmer_level": 4,
+    "programmer_level_description": "Intermediate"
+  },
+  {
+    "library_name": "tar",
+    "description": "A library for reading and writing tar archives.",
+    "programmer_level": 4,
+    "programmer_level_description": "Intermediate"
+  },
+  {
+    "library_name": "zip",
+    "description": "A library for reading and writing ZIP archives.",
+    "programmer_level": 4,
+    "programmer_level_description": "Intermediate"
+  },
+  {
+    "library_name": "flate2",
+    "description": "Bindings for zlib, providing compression and decompression functionality.",
+    "programmer_level": 4,
+    "programmer_level_description": "Intermediate"
+  },
+  {
+    "library_name": "serde_cbor",
+    "description": "A library for serializing and deserializing CBOR data with Serde.",
+    "programmer_level": 4,
+    "programmer_level_description": "Intermediate"
+  },
+  {
+    "library_name": "serde_xml_rs",
+    "description": "A library for serializing and deserializing XML data with Serde.",
+    "programmer_level": 4,
+    "programmer_level_description": "Intermediate"
+  },
+  {
+    "library_name": "quick-xml",
+    "description": "A high-performance XML parser and serializer.",
+    "programmer_level": 5,
+    "programmer_level_description": "Solid Intermediate"
+  },
+  {
+    "library_name": "xml-rs",
+    "description": "A streaming XML parser for Rust.",
+    "programmer_level": 5,
+    "programmer_level_description": "Solid Intermediate"
+  },
+  {
+    "library_name": "serde_derive_internals",
+    "description": "Internal utilities for serde_derive, used for advanced serialization customization.",
+    "programmer_level": 8,
+    "programmer_level_description": "Advanced"
+  },
+  {
+    "library_name": "proc-macro-error",
+    "description": "A library for improved error reporting in procedural macros.",
+    "programmer_level": 8,
+    "programmer_level_description": "Advanced"
+  },
+  {
+    "library_name": "darling",
+    "description": "A library for parsing attributes in procedural macros.",
+    "programmer_level": 8,
+    "programmer_level_description": "Advanced"
+  },
+  {
+    "library_name": "synstructure",
+    "description": "A library for procedural macros that work with struct fields.",
+    "programmer_level": 8,
+    "programmer_level_description": "Advanced"
+  },
+  {
+    "library_name": "async-recursion",
+    "description": "A macro for writing recursive async functions.",
+    "programmer_level": 6,
+    "programmer_level_description": "Advanced Intermediate"
+  },
+  {
+    "library_name": "futures-executor",
+    "description": "Executors for running futures in async applications.",
+    "programmer_level": 6,
+    "programmer_level_description": "Advanced Intermediate"
+  },
+  {
+    "library_name": "futures-channel",
+    "description": "Channels for async communication in futures-based applications.",
+    "programmer_level": 6,
+    "programmer_level_description": "Advanced Intermediate"
+  },
+  {
+    "library_name": "futures-core",
+    "description": "Core traits and types for the futures crate.",
+    "programmer_level": 6,
+    "programmer_level_description": "Advanced Intermediate"
+  },
+  {
+    "library_name": "tokio-util",
+    "description": "Utility functions for Tokio, including codec and framing support.",
+    "programmer_level": 6,
+    "programmer_level_description": "Advanced Intermediate"
+  },
+  {
+    "library_name": "tokio-macros",
+    "description": "Macros for Tokio, simplifying async task definitions.",
+    "programmer_level": 6,
+    "programmer_level_description": "Advanced Intermediate"
+  },
+  {
+    "library_name": "tokio-timer",
+    "description": "Timer utilities for scheduling tasks in Tokio applications.",
+    "programmer_level": 6,
+    "programmer_level_description": "Advanced Intermediate"
+  },
+  {
+    "library_name": "async-attributes",
+    "description": "Attributes for simplifying async function declarations.",
+    "programmer_level": 6,
+    "programmer_level_description": "Advanced Intermediate"
+  },
+  {
+    "library_name": "async-global-executor",
+    "description": "A global executor for async tasks, simplifying async runtime usage.",
+    "programmer_level": 6,
+    "programmer_level_description": "Advanced Intermediate"
+  },
+  {
+    "library_name": "async-lock",
+    "description": "Asynchronous locking primitives for Rust.",
+    "programmer_level": 6,
+    "programmer_level_description": "Advanced Intermediate"
+  },
+  {
+    "library_name": "async-task",
+    "description": "Low-level task management for async runtimes.",
+    "programmer_level": 7,
+    "programmer_level_description": "Early Advanced"
+  },
+  {
+    "library_name": "async-io",
+    "description": "Asynchronous I/O primitives for Rust.",
+    "programmer_level": 7,
+    "programmer_level_description": "Early Advanced"
+  },
+  {
+    "library_name": "smol-potat",
+    "description": "A minimal async runtime for lightweight applications.",
+    "programmer_level": 6,
+    "programmer_level_description": "Advanced Intermediate"
+  },
+  {
+    "library_name": "crossbeam-epoch",
+    "description": "Epoch-based memory reclamation for concurrent data structures.",
+    "programmer_level": 7,
+    "programmer_level_description": "Early Advanced"
+  },
+  {
+    "library_name": "crossbeam-deque",
+    "description": "Concurrent work-stealing deques for task scheduling.",
+    "programmer_level": 6,
+    "programmer_level_description": "Advanced Intermediate"
+  },
+  {
+    "library_name": "arrayvec",
+    "description": "A fixed-capacity vector that stores elements on the stack.",
+    "programmer_level": 5,
+    "programmer_level_description": "Solid Intermediate"
+  },
+  {
+    "library_name": "tinyvec",
+    "description": "A small, stack-allocated vector for constrained environments.",
+    "programmer_level": 5,
+    "programmer_level_description": "Solid Intermediate"
+  },
+  {
+    "library_name": "vec_map",
+    "description": "A map implementation using a vector for small datasets.",
+    "programmer_level": 4,
+    "programmer_level_description": "Intermediate"
+  },
+  {
+    "library_name": "bumpalo",
+    "description": "A bump allocator for fast memory allocation in Rust.",
+    "programmer_level": 6,
+    "programmer_level_description": "Advanced Intermediate"
+  },
+  {
+    "library_name": "allocator-api2",
+    "description": "A library for custom memory allocators in Rust.",
+    "programmer_level": 7,
+    "programmer_level_description": "Early Advanced"
+  },
+  {
+    "library_name": "hashlink",
+    "description": "A hash map with linked list-like iteration order.",
+    "programmer_level": 5,
+    "programmer_level_description": "Solid Intermediate"
+  },
+  {
+    "library_name": "lru",
+    "description": "A least-recently-used cache implementation.",
+    "programmer_level": 5,
+    "programmer_level_description": "Solid Intermediate"
+  },
+  {
+    "library_name": "parking_lot_rt",
+    "description": "Runtime components for the parking_lot crate.",
+    "programmer_level": 6,
+    "programmer_level_description": "Advanced Intermediate"
+  },
+  {
+    "library_name": "lock_api",
+    "description": "Abstractions for lock primitives, used with parking_lot.",
+    "programmer_level": 6,
+    "programmer_level_description": "Advanced Intermediate"
+  },
+  {
+    "library_name": "spin",
+    "description": "Spinlock-based synchronization primitives for no_std environments.",
+    "programmer_level": 6,
+    "programmer_level_description": "Advanced Intermediate"
+  },
+  {
+    "library_name": "atomic_refcell",
+    "description": "Thread-safe RefCell for shared mutable state.",
+    "programmer_level": 6,
+    "programmer_level_description": "Advanced Intermediate"
+  },
+  {
+    "library_name": "crossbeam-skiplist",
+    "description": "A concurrent skip list for ordered data storage.",
+    "programmer_level": 7,
+    "programmer_level_description": "Early Advanced"
+  },
+  {
+    "library_name": "memchr",
+    "description": "Optimized string searching routines for single-byte patterns.",
+    "programmer_level": 5,
+    "programmer_level_description": "Solid Intermediate"
+  },
+  {
+    "library_name": "aho-corasick",
+    "description": "A fast string searching algorithm for multiple patterns.",
+    "programmer_level": 5,
+    "programmer_level_description": "Solid Intermediate"
+  },
+  {
+    "library_name": "regex-syntax",
+    "description": "Syntax parsing for the regex crate.",
+    "programmer_level": 6,
+    "programmer_level_description": "Advanced Intermediate"
+  },
+  {
+    "library_name": "unicode-segmentation",
+    "description": "A library for Unicode text segmentation, like grapheme clusters.",
+    "programmer_level": 4,
+    "programmer_level_description": "Intermediate"
+  },
+  {
+    "library_name": "unicode-width",
+    "description": "A library for calculating the display width of Unicode strings.",
+    "programmer_level": 4,
+    "programmer_level_description": "Intermediate"
+  },
+  {
+    "library_name": "unicode-normalization",
+    "description": "Unicode normalization for string comparison and processing.",
+    "programmer_level": 4,
+    "programmer_level_description": "Intermediate"
+  },
+  {
+    "library_name": "idna",
+    "description": "A library for Internationalized Domain Names (IDNA) processing.",
+    "programmer_level": 5,
+    "programmer_level_description": "Solid Intermediate"
+  },
+  {
+    "library_name": "percent-encoding",
+    "description": "A library for encoding and decoding percent-encoded URLs.",
+    "programmer_level": 4,
+    "programmer_level_description": "Intermediate"
+  },
+  {
+    "library_name": "form_urlencoded",
+    "description": "A library for parsing and generating URL-encoded form data.",
+    "programmer_level": 4,
+    "programmer_level_description": "Intermediate"
+  },
+  {
+    "library_name": "http-body",
+    "description": "A library for handling HTTP request and response bodies.",
+    "programmer_level": 5,
+    "programmer_level_description": "Solid Intermediate"
+  },
+  {
+    "library_name": "hyper-tls",
+    "description": "TLS support for the hyper HTTP library.",
+    "programmer_level": 6,
+    "programmer_level_description": "Advanced Intermediate"
+  },
+  {
+    "library_name": "native-tls",
+    "description": "A library for integrating native TLS implementations.",
+    "programmer_level": 6,
+    "programmer_level_description": "Advanced Intermediate"
+  },
+  {
+    "library_name": "openssl",
+    "description": "Bindings to OpenSSL for cryptographic operations.",
+    "programmer_level": 6,
+    "programmer_level_description": "Advanced Intermediate"
+  },
+  {
+    "library_name": "crypto-common",
+    "description": "Common cryptographic traits and utilities.",
+    "programmer_level": 6,
+    "programmer_level_description": "Advanced Intermediate"
+  },
+  {
+    "library_name": "digest",
+    "description": "A trait for cryptographic hash functions.",
+    "programmer_level": 6,
+    "programmer_level_description": "Advanced Intermediate"
+  },
+  {
+    "library_name": "md-5",
+    "description": "Implementation of the MD5 hash function.",
+    "programmer_level": 6,
+    "programmer_level_description": "Advanced Intermediate"
+  },
+  {
+    "library_name": "sha1",
+    "description": "Implementation of the SHA-1 hash function.",
+    "programmer_level": 6,
+    "programmer_level_description": "Advanced Intermediate"
+  },
+  {
+    "library_name": "aes",
+    "description": "Implementation of the AES encryption algorithm.",
+    "programmer_level": 7,
+    "programmer_level_description": "Early Advanced"
+  },
+  {
+    "library_name": "block-modes",
+    "description": "Block cipher modes for encryption algorithms like AES.",
+    "programmer_level": 7,
+    "programmer_level_description": "Early Advanced"
+  },
+  {
+    "library_name": "rand_chacha",
+    "description": "ChaCha random number generator for the rand crate.",
+    "programmer_level": 4,
+    "programmer_level_description": "Intermediate"
+  },
+  {
+    "library_name": "getrandom",
+    "description": "A library for accessing system random number sources.",
+    "programmer_level": 4,
+    "programmer_level_description": "Intermediate"
+  },
+  {
+    "library_name": "rand_hc",
+    "description": "HC128 random number generator for the rand crate.",
+    "programmer_level": 4,
+    "programmer_level_description": "Intermediate"
+  },
+  {
+    "library_name": "serde_bytes",
+    "description": "Optimized serialization for byte arrays with Serde.",
+    "programmer_level": 4,
+    "programmer_level_description": "Intermediate"
+  },
+  {
+    "library_name": "serde_test",
+    "description": "A testing framework for Serde serialization.",
+    "programmer_level": 4,
+    "programmer_level_description": "Intermediate"
+  },
+  {
+    "library_name": "serde_json_borrow",
+    "description": "JSON serialization with borrowed data for performance.",
+    "programmer_level": 5,
+    "programmer_level_description": "Solid Intermediate"
+  },
+  {
+    "library_name": "serde_ignored",
+    "description": "A library for detecting ignored fields during Serde deserialization.",
+    "programmer_level": 5,
+    "programmer_level_description": "Solid Intermediate"
+  },
+  {
+    "library_name": "serde_repr",
+    "description": "Macros for serializing enums as integers with Serde.",
+    "programmer_level": 4,
+    "programmer_level_description": "Intermediate"
+  },
+  {
+    "library_name": "serde_tuple",
+    "description": "Macros for serializing tuples with Serde.",
+    "programmer_level": 4,
+    "programmer_level_description": "Intermediate"
+  }
+]

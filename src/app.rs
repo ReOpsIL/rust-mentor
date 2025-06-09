@@ -18,20 +18,32 @@ pub struct LearningModule {
 
 pub enum AppState {
     Welcome,
+    IndexSelection,
     Learning,
     Loading,
+    LevelTooLowPopup,
+}
+
+pub enum IndexType {
+    RustLibrary,
+    RustByExample,
+    RustProgrammingLanguage,
+    Random,
 }
 
 pub struct App {
     pub is_running: bool,
     pub current_state: AppState,
     pub selected_level: u8,
+    pub selected_index: IndexType,
+    pub index_selection_cursor: usize, // 0 = RustLibrary, 1 = RustProgrammingLanguage, 2 = Random
     pub show_help: bool,
     pub show_quit_confirmation: bool,
     pub quit_confirmation_selected: bool, // true = Yes, false = No
     pub api_key: String,
     pub scroll_offset: u16,
     pub current_module: Option<LearningModule>,
+    pub popup_start_time: Option<std::time::Instant>, // For tracking popup display time
     llm_client: LlmClient,
     module_receiver: mpsc::Receiver<Result<LearningModule>>,
     module_sender: mpsc::Sender<Result<LearningModule>>,
@@ -46,6 +58,8 @@ impl App {
             is_running: true,
             current_state: AppState::Welcome,
             selected_level: 5, // Default level
+            selected_index: IndexType::Random, // Default index
+            index_selection_cursor: 0, // Default cursor position
             show_help: false,
             show_quit_confirmation: false,
             quit_confirmation_selected: false, // Default to "No"
@@ -53,12 +67,26 @@ impl App {
             api_key,
             scroll_offset: 0,
             current_module: None,
+            popup_start_time: None,
             module_receiver,
             module_sender,
         }
     }
 
     pub fn tick(&mut self) {
+        // Check if we're in the LevelTooLowPopup state and if the timer has expired
+        if let AppState::LevelTooLowPopup = self.current_state {
+            if let Some(start_time) = self.popup_start_time {
+                // Check if 3 seconds have passed
+                if start_time.elapsed().as_secs() >= 3 {
+                    // Reset the timer
+                    self.popup_start_time = None;
+                    // Return to the welcome screen
+                    self.current_state = AppState::Welcome;
+                }
+            }
+        }
+
         // Check if we're in the Loading state and if there's a message from the LLM client
         if let AppState::Loading = self.current_state {
             // Try to receive a message from the channel (non-blocking)
@@ -162,6 +190,7 @@ impl App {
         // Context-specific keybindings
         match self.current_state {
             AppState::Welcome => self.handle_welcome_keys(key_event),
+            AppState::IndexSelection => self.handle_index_selection_keys(key_event),
             AppState::Learning => self.handle_learning_keys(key_event),
             _ => {}
         }
@@ -177,17 +206,60 @@ impl App {
                 self.selected_level = (self.selected_level - 1).max(1);
             }
             KeyCode::Enter => {
-                self.current_state = AppState::Loading;
-                // Generate a learning module based on the selected level
-                self.generate_learning_module();
+                // Transition to index selection state
+                self.current_state = AppState::IndexSelection;
+                // Reset cursor position
+                self.index_selection_cursor = 0;
+            }
+            _ => {}
+        }
+    }
+
+    fn handle_index_selection_keys(&mut self, key_event: KeyEvent) {
+        match key_event.code {
+            KeyCode::Down | KeyCode::Char('j') => {
+                // Move cursor down (0-2)
+                self.index_selection_cursor = (self.index_selection_cursor + 1).min(3);
+            }
+            KeyCode::Up | KeyCode::Char('k') => {
+                // Move cursor up
+                self.index_selection_cursor = self.index_selection_cursor.saturating_sub(1);
+            }
+            KeyCode::Enter => {
+                // Set the selected index based on cursor position
+                self.selected_index = match self.index_selection_cursor {
+                    0 => IndexType::RustLibrary,
+                    1 => IndexType::RustByExample,
+                    2 => IndexType::RustProgrammingLanguage,
+                    3 => IndexType::Random,
+                    _ => IndexType::Random,
+                };
+
+                // Check if the user selected the library index and if their level is less than 3
+                if self.index_selection_cursor == 0 && self.selected_level < 3 {
+                    // Show the level too low popup
+                    self.current_state = AppState::LevelTooLowPopup;
+                    // Start the timer
+                    self.popup_start_time = Some(std::time::Instant::now());
+                } else {
+                    // Transition to loading state
+                    self.current_state = AppState::Loading;
+
+                    // Generate a learning module based on the selected level and index
+                    self.generate_learning_module();
+                }
+            }
+            KeyCode::Esc => {
+                // Go back to welcome screen
+                self.current_state = AppState::Welcome;
             }
             _ => {}
         }
     }
 
     fn generate_learning_module(&mut self) {
-        // Get a random topic based on the user's level
-        match data::get_random_topic_for_level(self.selected_level) {
+        // Get a random topic based on the user's level and selected index
+        match data::get_random_topic_for_level(self.selected_level, &self.selected_index) {
             Ok(topic) => {
                 // Clone the sender and topic for the async task
                 let sender = self.module_sender.clone();
