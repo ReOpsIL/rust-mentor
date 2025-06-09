@@ -2,7 +2,6 @@
 use crate::app::LearningModule;
 use crate::data::Topic;
 use anyhow::Result;
-use chrono::Local;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use crate::config::Config;
@@ -101,9 +100,12 @@ impl LlmClient {
         self.parse_response(response, topic)
     }
 
-    // Create a prompt for the LLM based on the topic and level
+    // Create a prompt for the LLM based on the topic, level, and customization options
     // In your struct impl
     fn create_prompt(&self, topic: &Topic, level: u8) -> String {
+        let config = Config::load().unwrap();
+        let customization = config.content_customization;
+
         let level_description = match level {
             1 => "Absolute Beginner",
             2 => "Beginner",
@@ -116,6 +118,26 @@ impl LlmClient {
             9 => "Very Advanced",
             10 => "Expert",
             _ => "Intermediate",
+        };
+
+        // Get customization settings as text
+        let complexity_text = match customization.code_complexity {
+            crate::config::CodeComplexity::Simple => "simple and straightforward",
+            crate::config::CodeComplexity::Moderate => "moderately complex",
+            crate::config::CodeComplexity::Complex => "complex and advanced",
+        };
+
+        let verbosity_text = match customization.explanation_verbosity {
+            crate::config::ExplanationVerbosity::Concise => "concise and to-the-point",
+            crate::config::ExplanationVerbosity::Moderate => "moderately detailed",
+            crate::config::ExplanationVerbosity::Detailed => "highly detailed and comprehensive",
+        };
+
+        let focus_instruction = match customization.focus_area {
+            crate::config::FocusArea::Concepts => "Focus more on explaining concepts than on code examples or exercises.",
+            crate::config::FocusArea::CodeExamples => "Focus more on providing code examples than on concepts or exercises.",
+            crate::config::FocusArea::Exercises => "Focus more on providing exercises than on concepts or code examples.",
+            crate::config::FocusArea::Balanced => "Provide a balanced mix of concepts, code examples, and exercises.",
         };
 
         // The refined prompt is much more explicit and strict.
@@ -137,35 +159,36 @@ Your task is to create a learning module about the topic '{topic}' for a Rust pr
     [Detailed explanation for the topic ...]
 
     <<<code_snippet 1: [code snippets title 1]>>>
-    # code snippet: [ code snippet description 1]
+    // code snippet: [ code snippet description 1]
     [ The actual example code snippet 1 ... ]
 
     <<<code_snippet 2: [code snippet title 2]>>>
-    # code snippet: [ code snippet description 2]
+    // code snippet: [ code snippet description 2]
     [ The actual example code snippet 2 ... ]
 
     <<<code_snippet n: [code snippet title n]>>>
-    # code snippet: [ code snippet description n]
+    // code snippet: [ code snippet description n]
     [ The actual example code snippet n ... ]
 
     <<<exercise 1: [ exercise name 1 ]>>>
-    # exercise description: [  exercise description 1 ]
+    // exercise description: [  exercise description 1 ]
     [ The actual exercise 1 code ... ]
 
     <<<exercise 2: [ exercise name 2 ]>>>
-    # exercise description: [ exercise description 2] 
+    // exercise description: [ exercise description 2] 
     [ The actual exercise 2 code ... ]
 
     <<<exercise n: [ exercise name n ]>>>
-    # exercise description: [ exercise description n] 
+    // exercise description: [ exercise description n] 
     [ The actual exercise n code ... ]
 
     ```
 
 **Content Guidelines:**
--   `explanation`: Provide a clear and concise explanation of the topic, tailored to the '{level_description}' level.
--   `code_snippets`: Provide several complete, runnable, and well-commented Rust code examples. The code's complexity must be appropriate for the target level.
+-   `explanation`: Provide a {verbosity_text} explanation of the topic, tailored to the '{level_description}' level.
+-   `code_snippets`: Provide several complete, runnable, and well-commented Rust code examples. The code should be {complexity_text}, appropriate for the target level.
 -   `exercises`: Provide several distinct practice exercises. They should be clear problem statements that allow the user to apply the concepts from the explanation and code snippets.
+-   {focus_instruction}
 
 **Request:**
 Generate the learning module for topic '{topic}' at the '{level_description}' level, following all rules above.
@@ -173,7 +196,10 @@ Source of this topic: {source}
 "#,
             topic = topic.topic,
             level_description = level_description,
-            source = topic.source
+            source = topic.source,
+            verbosity_text = verbosity_text,
+            complexity_text = complexity_text,
+            focus_instruction = focus_instruction
         )
     }
 
@@ -249,6 +275,7 @@ Source of this topic: {source}
                     } else {
                         prompt_res.exercises
                     },
+                    additional_resources: None, // Will be populated by the App when displayed
                 })
             }
             Err(e) => {
@@ -272,8 +299,8 @@ Source of this topic: {source}
                         name: "Error - No exercises extracted from LLM response".to_string(),
                         description: "// No exercises ...".to_string(),
                         code: "// No code provided".to_string(),
-                    }
-                    ]
+                    }],
+                    additional_resources: None,
                 })
             }
         }

@@ -1,5 +1,6 @@
 // src/ui.rs
-use crate::app::{App, AppState};
+use crate::app::{App, AppState, SettingsSection};
+use crate::config::{CodeComplexity, ExplanationVerbosity, FocusArea};
 use lazy_static::lazy_static;
 use ratatui::prelude::*;
 use ratatui::widgets::*;
@@ -32,6 +33,7 @@ pub fn render(frame: &mut Frame, app: &App) {
         AppState::IndexSelection => render_index_selection_view(frame, app, &main_layout),
         AppState::Learning => render_learning_view(frame, app, &main_layout),
         AppState::Loading => render_loading_view(frame, app, &main_layout),
+        AppState::Settings => render_settings_view(frame, app, &main_layout),
         AppState::LevelTooLowPopup => render_welcome_view(frame, app, &main_layout), // Render welcome view in background
     }
 
@@ -109,8 +111,8 @@ pub fn render_welcome_view(frame: &mut Frame, app: &App, layout: &[Rect]) {
 
     // Render footer
     let footer_spans = vec![
-        Span::raw("(k/↑, j/↓) Change Level | (?) Help"),
-        Span::raw("(q) Quit"),
+        Span::raw("(k/↑, j/↓) Change Level | (?) Help "),
+        Span::raw("| (s) Settings | (q) Quit"),
     ];
 
     let footer_line = Line::from(footer_spans);
@@ -267,6 +269,86 @@ pub fn render_learning_view(frame: &mut Frame, app: &App, layout: &[Rect]) {
             content_lines.push(Line::from(""));
         }
 
+        // Add additional learning resources if available
+        if let Some(resources) = &module.additional_resources {
+            content_lines.push(Line::from(""));
+            content_lines.push(Line::from(vec![Span::styled(
+                "Additional Learning Resources:",
+                Style::default()
+                    .fg(Color::LightYellow)
+                    .add_modifier(Modifier::BOLD),
+            )]));
+            content_lines.push(Line::from(""));
+
+            // Official documentation
+            if !resources.official_docs.is_empty() {
+                content_lines.push(Line::from(vec![Span::styled(
+                    "Official Documentation:",
+                    Style::default().add_modifier(Modifier::BOLD),
+                )]));
+
+                for resource in &resources.official_docs {
+                    content_lines.push(Line::from(vec![
+                        Span::styled(format!("• {}: ", resource.title), Style::default().add_modifier(Modifier::BOLD)),
+                        Span::styled(resource.url.clone(), Style::default().fg(Color::LightBlue)),
+                    ]));
+                    content_lines.push(Line::from(format!("  {}", resource.description)));
+                }
+                content_lines.push(Line::from(""));
+            }
+
+            // Community resources
+            if !resources.community_resources.is_empty() {
+                content_lines.push(Line::from(vec![Span::styled(
+                    "Community Resources:",
+                    Style::default().add_modifier(Modifier::BOLD),
+                )]));
+
+                for resource in &resources.community_resources {
+                    content_lines.push(Line::from(vec![
+                        Span::styled(format!("• {}: ", resource.title), Style::default().add_modifier(Modifier::BOLD)),
+                        Span::styled(resource.url.clone(), Style::default().fg(Color::LightBlue)),
+                    ]));
+                    content_lines.push(Line::from(format!("  {}", resource.description)));
+                }
+                content_lines.push(Line::from(""));
+            }
+
+            // Crates.io links
+            if !resources.crates_io.is_empty() {
+                content_lines.push(Line::from(vec![Span::styled(
+                    "Crates.io Packages:",
+                    Style::default().add_modifier(Modifier::BOLD),
+                )]));
+
+                for resource in &resources.crates_io {
+                    content_lines.push(Line::from(vec![
+                        Span::styled(format!("• {}: ", resource.title), Style::default().add_modifier(Modifier::BOLD)),
+                        Span::styled(resource.url.clone(), Style::default().fg(Color::LightBlue)),
+                    ]));
+                    content_lines.push(Line::from(format!("  {}", resource.description)));
+                }
+                content_lines.push(Line::from(""));
+            }
+
+            // GitHub repositories
+            if !resources.github_repos.is_empty() {
+                content_lines.push(Line::from(vec![Span::styled(
+                    "GitHub Repositories:",
+                    Style::default().add_modifier(Modifier::BOLD),
+                )]));
+
+                for resource in &resources.github_repos {
+                    content_lines.push(Line::from(vec![
+                        Span::styled(format!("• {}: ", resource.title), Style::default().add_modifier(Modifier::BOLD)),
+                        Span::styled(resource.url.clone(), Style::default().fg(Color::LightBlue)),
+                    ]));
+                    content_lines.push(Line::from(format!("  {}", resource.description)));
+                }
+                content_lines.push(Line::from(""));
+            }
+        }
+
         // Create the scrollable paragraph
         let content = Paragraph::new(content_lines)
             .block(Block::default().borders(Borders::NONE))
@@ -345,8 +427,8 @@ pub fn render_index_selection_view(frame: &mut Frame, app: &App, layout: &[Rect]
 
     // Render footer
     let footer_spans = vec![
-        Span::raw("(k/↑, j/↓) Change Selection | (Enter) Confirm | (Esc) Back"),
-        Span::raw("(?) Help | (q) Quit"),
+        Span::raw("(k/↑, j/↓) Change Selection | (Enter) Confirm | (Esc) Back "),
+        Span::raw("| (?) Help | (s) Settings | (q) Quit"),
     ];
 
     let footer_line = Line::from(footer_spans);
@@ -411,6 +493,218 @@ fn render_modal(frame: &mut Frame, area: Rect, widget: impl Widget) {
     frame.render_widget(widget, area);
 }
 
+pub fn render_settings_view(frame: &mut Frame, app: &App, layout: &[Rect]) {
+    // Render title bar
+    let title = Paragraph::new("Rust AI Mentor :: Settings")
+        .style(
+            Style::default()
+                .fg(Color::LightYellow)
+                .add_modifier(Modifier::BOLD),
+        )
+        .block(Block::default().borders(Borders::BOTTOM));
+    frame.render_widget(title, layout[0]);
+
+    // Create a layout for the settings content
+    let settings_layout = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([
+            Constraint::Percentage(30), // Left sidebar (sections)
+            Constraint::Percentage(70), // Right content (options)
+        ])
+        .split(layout[1]);
+
+    // Render sections sidebar
+    let sections = vec![
+        "Learning Resources",
+        "Content Customization",
+    ];
+
+    let mut section_lines = Vec::new();
+    for (i, section) in sections.iter().enumerate() {
+        let is_selected = match (i, &app.settings_section) {
+            (0, SettingsSection::LearningResources) => true,
+            (1, SettingsSection::ContentCustomization) => true,
+            _ => false,
+        };
+
+        let line = if is_selected {
+            Line::from(vec![Span::styled(
+                format!("> {}", section),
+                Style::default().fg(Color::Black).bg(Color::LightYellow),
+            )])
+        } else {
+            Line::from(vec![Span::raw(format!("  {}", section))])
+        };
+        section_lines.push(line);
+    }
+
+    let sections_widget = Paragraph::new(section_lines)
+        .block(Block::default().borders(Borders::RIGHT).title("Sections"));
+    frame.render_widget(sections_widget, settings_layout[0]);
+
+    // Render options based on selected section
+    match app.settings_section {
+        SettingsSection::LearningResources => {
+            render_learning_resources_settings(frame, app, settings_layout[1]);
+        }
+        SettingsSection::ContentCustomization => {
+            render_content_customization_settings(frame, app, settings_layout[1]);
+        }
+    }
+
+    // Render footer
+    let status = Paragraph::new("(Tab) Switch Section | (k/↑, j/↓) Navigate | (Enter/Space) Toggle | (Esc) Back | (?) Help")
+        .alignment(Alignment::Center)
+        .block(Block::default().borders(Borders::TOP));
+    frame.render_widget(status, layout[2]);
+}
+
+fn render_learning_resources_settings(frame: &mut Frame, app: &App, area: Rect) {
+    let resources = app.get_learning_resources();
+
+    let mut option_lines = Vec::new();
+    option_lines.push(Line::from(vec![Span::styled(
+        "Learning Resources Settings",
+        Style::default().add_modifier(Modifier::BOLD),
+    )]));
+    option_lines.push(Line::from(""));
+
+    // Show Official Documentation
+    let official_docs_line = if app.settings_cursor == 0 {
+        Line::from(vec![Span::styled(
+            format!("> Show Official Documentation: [{}]", if resources.show_official_docs { "X" } else { " " }),
+            Style::default().fg(Color::Black).bg(Color::LightYellow),
+        )])
+    } else {
+        Line::from(vec![Span::raw(
+            format!("  Show Official Documentation: [{}]", if resources.show_official_docs { "X" } else { " " }),
+        )])
+    };
+    option_lines.push(official_docs_line);
+
+    // Show Community Resources
+    let community_line = if app.settings_cursor == 1 {
+        Line::from(vec![Span::styled(
+            format!("> Show Community Resources: [{}]", if resources.show_community_resources { "X" } else { " " }),
+            Style::default().fg(Color::Black).bg(Color::LightYellow),
+        )])
+    } else {
+        Line::from(vec![Span::raw(
+            format!("  Show Community Resources: [{}]", if resources.show_community_resources { "X" } else { " " }),
+        )])
+    };
+    option_lines.push(community_line);
+
+    // Show Crates.io Links
+    let crates_line = if app.settings_cursor == 2 {
+        Line::from(vec![Span::styled(
+            format!("> Show Crates.io Links: [{}]", if resources.show_crates_io { "X" } else { " " }),
+            Style::default().fg(Color::Black).bg(Color::LightYellow),
+        )])
+    } else {
+        Line::from(vec![Span::raw(
+            format!("  Show Crates.io Links: [{}]", if resources.show_crates_io { "X" } else { " " }),
+        )])
+    };
+    option_lines.push(crates_line);
+
+    // Show GitHub Repositories
+    let github_line = if app.settings_cursor == 3 {
+        Line::from(vec![Span::styled(
+            format!("> Show GitHub Repositories: [{}]", if resources.show_github_repos { "X" } else { " " }),
+            Style::default().fg(Color::Black).bg(Color::LightYellow),
+        )])
+    } else {
+        Line::from(vec![Span::raw(
+            format!("  Show GitHub Repositories: [{}]", if resources.show_github_repos { "X" } else { " " }),
+        )])
+    };
+    option_lines.push(github_line);
+
+    option_lines.push(Line::from(""));
+    option_lines.push(Line::from("These settings control what additional learning resources are shown alongside the AI-generated content."));
+
+    let options_widget = Paragraph::new(option_lines)
+        .block(Block::default().borders(Borders::NONE).title("Options"));
+    frame.render_widget(options_widget, area);
+}
+
+fn render_content_customization_settings(frame: &mut Frame, app: &App, area: Rect) {
+    let customization = app.get_content_customization();
+
+    let mut option_lines = Vec::new();
+    option_lines.push(Line::from(vec![Span::styled(
+        "Content Customization Settings",
+        Style::default().add_modifier(Modifier::BOLD),
+    )]));
+    option_lines.push(Line::from(""));
+
+    // Code Complexity
+    let complexity_text = match customization.code_complexity {
+        CodeComplexity::Simple => "Simple",
+        CodeComplexity::Moderate => "Moderate",
+        CodeComplexity::Complex => "Complex",
+    };
+
+    let complexity_line = if app.settings_cursor == 0 {
+        Line::from(vec![Span::styled(
+            format!("> Code Complexity: [{}]", complexity_text),
+            Style::default().fg(Color::Black).bg(Color::LightYellow),
+        )])
+    } else {
+        Line::from(vec![Span::raw(
+            format!("  Code Complexity: [{}]", complexity_text),
+        )])
+    };
+    option_lines.push(complexity_line);
+
+    // Explanation Verbosity
+    let verbosity_text = match customization.explanation_verbosity {
+        ExplanationVerbosity::Concise => "Concise",
+        ExplanationVerbosity::Moderate => "Moderate",
+        ExplanationVerbosity::Detailed => "Detailed",
+    };
+
+    let verbosity_line = if app.settings_cursor == 1 {
+        Line::from(vec![Span::styled(
+            format!("> Explanation Verbosity: [{}]", verbosity_text),
+            Style::default().fg(Color::Black).bg(Color::LightYellow),
+        )])
+    } else {
+        Line::from(vec![Span::raw(
+            format!("  Explanation Verbosity: [{}]", verbosity_text),
+        )])
+    };
+    option_lines.push(verbosity_line);
+
+    // Focus Area
+    let focus_text = match customization.focus_area {
+        FocusArea::Concepts => "Concepts",
+        FocusArea::CodeExamples => "Code Examples",
+        FocusArea::Exercises => "Exercises",
+        FocusArea::Balanced => "Balanced",
+    };
+
+    let focus_line = if app.settings_cursor == 2 {
+        Line::from(vec![Span::styled(
+            format!("> Focus Area: [{}]", focus_text),
+            Style::default().fg(Color::Black).bg(Color::LightYellow),
+        )])
+    } else {
+        Line::from(vec![Span::raw(
+            format!("  Focus Area: [{}]", focus_text),
+        )])
+    };
+    option_lines.push(focus_line);
+
+    option_lines.push(Line::from(""));
+    option_lines.push(Line::from("These settings control how the AI generates content for your learning modules."));
+
+    let options_widget = Paragraph::new(option_lines)
+        .block(Block::default().borders(Borders::NONE).title("Options"));
+    frame.render_widget(options_widget, area);
+}
+
 pub fn render_help_modal(frame: &mut Frame) {
     // Calculate a centered rect for the modal
     let area = centered_rect(60, 60, frame.size());
@@ -420,6 +714,7 @@ pub fn render_help_modal(frame: &mut Frame) {
         Line::from("Global Keybindings:"),
         Line::from("  ? - Toggle help"),
         Line::from("  q - Quit"),
+        Line::from("  s - Open settings"),
         Line::from(""),
         Line::from("Welcome Screen:"),
         Line::from("  k/↑, j/↓ - Change level"),
@@ -433,6 +728,12 @@ pub fn render_help_modal(frame: &mut Frame) {
         Line::from("Learning Screen:"),
         Line::from("  k/↑, j/↓ - Scroll content"),
         Line::from("  n - Request new module"),
+        Line::from("  Esc - Return to welcome screen"),
+        Line::from(""),
+        Line::from("Settings Screen:"),
+        Line::from("  Tab - Switch between sections"),
+        Line::from("  k/↑, j/↓ - Navigate options"),
+        Line::from("  Enter/Space - Toggle or cycle selected option"),
         Line::from("  Esc - Return to welcome screen"),
     ];
 

@@ -86,6 +86,25 @@ The MVP will be developed in four distinct phases, building from the foundation 
     *   Code cleanup, documentation, and final review.
 *   **Milestone:** **All MVP features (F001-F007) are fully functional. The application is stable, provides a polished user experience, and is ready for initial user testing.**
 
+---
+#### **Phase 5: Advanced Features & Customization**
+*   **Goal:** Implement advanced features that enhance the personalization and customization of the learning experience.
+*   **Features/Tasks:**
+    *   **F008:** Implement Learning Resources Customization
+        *   Add configuration options for toggling visibility of different learning resources
+        *   Update the UI to display or hide resources based on user preferences
+    *   **F009:** Implement Content Customization
+        *   Add configuration options for code complexity, explanation verbosity, and focus area
+        *   Update the LLM prompt generation to incorporate these customization options
+    *   **F010:** Implement Settings Management
+        *   Create a dedicated Settings View in the TUI
+        *   Implement navigation between settings sections
+        *   Add UI components for toggling and cycling through options
+        *   Ensure settings are persisted between application sessions
+    *   Enhance the Help Modal to include information about the new settings features
+    *   Update documentation to reflect the new features
+*   **Milestone:** **Advanced features (F008-F010) are fully functional. Users can customize their learning experience through a dedicated settings interface. Settings are persisted between sessions.**
+
 ### **3. Responsibility Mapping (Conceptual)**
 
 For a project of this scope, a small, focused team (or a single developer wearing multiple hats) is ideal.

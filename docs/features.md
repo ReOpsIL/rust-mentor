@@ -113,3 +113,52 @@ This document outlines the features for the Rust AI Mentor application, based on
 *   **Key Interactions/Dependencies:** Depends on F001 (UI for the request option), F002 (to maintain level context for the new request),
       and triggers F004 (AI-Powered Learning Module Generation) for a new module.
 *   **Priority:** Must-have
+
+## Advanced Features
+
+### **Feature 8: Learning Resources Customization**
+*   **Feature ID:** F008
+*   **Description:** Users can customize which learning resources are displayed alongside the AI-generated content.
+      Options include:
+      - Official Rust documentation
+      - Community resources
+      - Crates.io packages
+      - GitHub repositories
+*   **Purpose & User Benefit:** Allows users to tailor their learning experience by controlling which external resources
+      are presented. This helps prevent information overload while ensuring users have access to the resources most relevant to their needs.
+*   **Support for App Goals:** Enhances the "Personalized & Adaptive Learning" value proposition by providing another dimension
+      of customization. Supports the "Efficient & Focused Content" goal by allowing users to filter out unnecessary information.
+*   **Key Interactions/Dependencies:** Implemented through the settings screen in the TUI. Affects how additional resources
+      are displayed alongside learning content.
+*   **Priority:** High
+
+### **Feature 9: Content Customization**
+*   **Feature ID:** F009
+*   **Description:** Users can customize the AI-generated content through several options:
+      - Code Complexity: Simple, Moderate, or Complex
+      - Explanation Verbosity: Concise, Moderate, or Detailed
+      - Focus Area: Concepts, Code Examples, Exercises, or Balanced
+*   **Purpose & User Benefit:** Provides fine-grained control over the learning experience, allowing users to adjust
+      the content to match their learning style and preferences. This addresses different learning approaches and helps
+      users focus on areas they want to improve.
+*   **Support for App Goals:** Significantly enhances the "Personalized & Adaptive Learning" value proposition by allowing
+      users to customize not just the difficulty level but also the style and focus of the content. Supports "Efficient & Focused Content"
+      by enabling users to prioritize what's most important to them.
+*   **Key Interactions/Dependencies:** Implemented through the settings screen in the TUI. Directly affects how prompts are
+      constructed for the LLM, influencing the generated content.
+*   **Priority:** High
+
+### **Feature 10: Settings Management**
+*   **Feature ID:** F010
+*   **Description:** A dedicated settings screen in the TUI allows users to view and modify all customization options.
+      Settings include:
+      - LLM model selection
+      - Learning resources visibility
+      - Content customization (complexity, verbosity, focus)
+*   **Purpose & User Benefit:** Provides a centralized, user-friendly interface for managing all application settings.
+      This makes it easy for users to experiment with different configurations to find what works best for their learning style.
+*   **Support for App Goals:** Supports the "Core TUI" requirement by extending the interface to include settings management.
+      Enhances the "Personalized & Adaptive Learning" value proposition by making customization options easily accessible.
+*   **Key Interactions/Dependencies:** Depends on F001 (TUI framework). Interacts with F008 (Learning Resources Customization)
+      and F009 (Content Customization) by providing the interface to control these features.
+*   **Priority:** High

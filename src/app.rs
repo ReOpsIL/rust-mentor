@@ -7,6 +7,7 @@ use tokio::sync::mpsc;
 
 use crate::prompt_response::{CodeSnippet, Exercise};
 use crate::cargo_project;
+use crate::config::ConfigService;
 
 #[derive(Clone)]
 pub struct LearningModule {
@@ -14,14 +15,32 @@ pub struct LearningModule {
     pub explanation: String,
     pub code_snippets: Vec<CodeSnippet>,
     pub exercises: Vec<Exercise>,
+    pub additional_resources: Option<AdditionalResources>,
 }
 
+#[derive(Clone)]
+pub struct AdditionalResources {
+    pub official_docs: Vec<Resource>,
+    pub community_resources: Vec<Resource>,
+    pub crates_io: Vec<Resource>,
+    pub github_repos: Vec<Resource>,
+}
+
+#[derive(Clone)]
+pub struct Resource {
+    pub title: String,
+    pub url: String,
+    pub description: String,
+}
+
+#[derive(PartialEq)]
 pub enum AppState {
     Welcome,
     IndexSelection,
     Learning,
     Loading,
     LevelTooLowPopup,
+    Settings,
 }
 
 pub enum IndexType {
@@ -37,6 +56,8 @@ pub struct App {
     pub selected_level: u8,
     pub selected_index: IndexType,
     pub index_selection_cursor: usize, // 0 = RustLibrary, 1 = RustProgrammingLanguage, 2 = Random
+    pub settings_cursor: usize, // Cursor position in settings screen
+    pub settings_section: SettingsSection, // Current section in settings screen
     pub show_help: bool,
     pub show_quit_confirmation: bool,
     pub quit_confirmation_selected: bool, // true = Yes, false = No
@@ -47,6 +68,13 @@ pub struct App {
     llm_client: LlmClient,
     module_receiver: mpsc::Receiver<Result<LearningModule>>,
     module_sender: mpsc::Sender<Result<LearningModule>>,
+    config_service: ConfigService,
+}
+
+#[derive(PartialEq)]
+pub enum SettingsSection {
+    LearningResources,
+    ContentCustomization,
 }
 
 impl App {
@@ -54,12 +82,17 @@ impl App {
         // Create a channel for communicating between the LLM task and the main app
         let (module_sender, module_receiver) = mpsc::channel(10);
 
+        // Initialize config service
+        let config_service = ConfigService::new();
+        
         Self {
             is_running: true,
             current_state: AppState::Welcome,
             selected_level: 5, // Default level
             selected_index: IndexType::Random, // Default index
             index_selection_cursor: 0, // Default cursor position
+            settings_cursor: 0, // Default settings cursor position
+            settings_section: SettingsSection::LearningResources, // Default settings section
             show_help: false,
             show_quit_confirmation: false,
             quit_confirmation_selected: false, // Default to "No"
@@ -70,6 +103,7 @@ impl App {
             popup_start_time: None,
             module_receiver,
             module_sender,
+            config_service,
         }
     }
 
@@ -94,8 +128,12 @@ impl App {
                 Ok(result) => {
                     match result {
                         Ok(module) => {
-                            // Successfully received a module, update the state
-                            self.current_module = Some(module.clone());
+                            // Generate additional resources if enabled
+                            let mut module_with_resources = module.clone();
+                            module_with_resources.additional_resources = self.generate_additional_resources(&module.topic);
+
+                            // Update the state
+                            self.current_module = Some(module_with_resources);
                             self.current_state = AppState::Learning;
                             self.scroll_offset = 0; // Reset scroll position for new content
 
@@ -121,7 +159,8 @@ impl App {
                                     err
                                 ),
                                 code_snippets: vec![],
-                                exercises: vec![]
+                                exercises: vec![],
+                                additional_resources: None,
                             };
 
                             self.current_module = Some(error_module);
@@ -142,6 +181,7 @@ impl App {
                         explanation: "There was an error communicating with the content generation service.\n\nPlease try again or select a different level.".to_string(),
                         code_snippets: vec![],
                         exercises: vec![],
+                        additional_resources: None,
                     };
 
                     self.current_module = Some(error_module);
@@ -184,6 +224,14 @@ impl App {
         match key_event.code {
             KeyCode::Char('q') => self.show_quit_confirmation = true,
             KeyCode::Char('?') => self.show_help = true,
+            KeyCode::Char('s') => {
+                // Toggle settings screen if not already in settings
+                if self.current_state != AppState::Settings {
+                    self.current_state = AppState::Settings;
+                    self.settings_cursor = 0;
+                    self.settings_section = SettingsSection::LearningResources;
+                }
+            },
             _ => {}
         }
 
@@ -192,6 +240,7 @@ impl App {
             AppState::Welcome => self.handle_welcome_keys(key_event),
             AppState::IndexSelection => self.handle_index_selection_keys(key_event),
             AppState::Learning => self.handle_learning_keys(key_event),
+            AppState::Settings => self.handle_settings_keys(key_event),
             _ => {}
         }
         Ok(())
@@ -294,7 +343,8 @@ impl App {
                         self.selected_level
                     ),
                     code_snippets: vec![],
-                    exercises: vec![]
+                    exercises: vec![],
+                    additional_resources: None,
                 };
 
                 // Set the current module
@@ -326,6 +376,205 @@ impl App {
             KeyCode::Down | KeyCode::Char('j') => {
                 // Scroll down (we don't know the max scroll, so we don't limit it)
                 self.scroll_offset += 1;
+            }
+            _ => {}
+        }
+    }
+
+    // Getter methods for config service
+    pub fn get_learning_resources(&self) -> &crate::config::LearningResources {
+        self.config_service.get_learning_resources()
+    }
+
+    pub fn get_content_customization(&self) -> &crate::config::ContentCustomization {
+        self.config_service.get_content_customization()
+    }
+
+    // Generate additional learning resources based on the topic
+    pub fn generate_additional_resources(&self, topic: &str) -> Option<AdditionalResources> {
+        // Only generate resources if we have a valid topic (not an error message)
+        if topic.starts_with("Error") {
+            return None;
+        }
+
+        let resources = self.config_service.get_learning_resources();
+
+        // Skip if all resource types are disabled
+        if !resources.show_official_docs && !resources.show_community_resources && 
+           !resources.show_crates_io && !resources.show_github_repos {
+            return None;
+        }
+
+        // Extract keywords from the topic
+        let keywords: Vec<&str> = topic.split_whitespace()
+            .filter(|word| word.len() > 3 && !["Rust", "rust", "The", "the", "and", "for"].contains(word))
+            .collect();
+
+        if keywords.is_empty() {
+            return None;
+        }
+
+        let mut official_docs = Vec::new();
+        let mut community_resources = Vec::new();
+        let mut crates_io = Vec::new();
+        let mut github_repos = Vec::new();
+
+        // Add official documentation if enabled
+        if resources.show_official_docs {
+            // Rust standard library docs
+            official_docs.push(Resource {
+                title: "Rust Standard Library Documentation".to_string(),
+                url: "https://doc.rust-lang.org/std/".to_string(),
+                description: "Official documentation for the Rust standard library".to_string(),
+            });
+
+            // Rust Book
+            official_docs.push(Resource {
+                title: "The Rust Programming Language Book".to_string(),
+                url: "https://doc.rust-lang.org/book/".to_string(),
+                description: "Comprehensive guide to the Rust programming language".to_string(),
+            });
+
+            // Rust by Example
+            official_docs.push(Resource {
+                title: "Rust By Example".to_string(),
+                url: "https://doc.rust-lang.org/rust-by-example/".to_string(),
+                description: "Collection of runnable examples that illustrate various Rust concepts".to_string(),
+            });
+
+            // Add keyword-specific resources
+            for keyword in &keywords {
+                official_docs.push(Resource {
+                    title: format!("Rust Documentation Search: {}", keyword),
+                    url: format!("https://doc.rust-lang.org/std/?search={}", keyword),
+                    description: format!("Search results for '{}' in the Rust documentation", keyword),
+                });
+            }
+        }
+
+        // Add community resources if enabled
+        if resources.show_community_resources {
+            // Rust Forum
+            community_resources.push(Resource {
+                title: "Rust Users Forum".to_string(),
+                url: "https://users.rust-lang.org/".to_string(),
+                description: "Official forum for Rust users to ask questions and share knowledge".to_string(),
+            });
+
+            // Rust Reddit
+            community_resources.push(Resource {
+                title: "Rust Subreddit".to_string(),
+                url: "https://www.reddit.com/r/rust/".to_string(),
+                description: "Reddit community for Rust developers".to_string(),
+            });
+
+            // Stack Overflow
+            for keyword in &keywords {
+                community_resources.push(Resource {
+                    title: format!("Stack Overflow: Rust + {}", keyword),
+                    url: format!("https://stackoverflow.com/questions/tagged/rust+{}", keyword),
+                    description: format!("Stack Overflow questions about Rust and {}", keyword),
+                });
+            }
+        }
+
+        // Add crates.io links if enabled
+        if resources.show_crates_io {
+            // General crates.io link
+            crates_io.push(Resource {
+                title: "Crates.io - The Rust Package Registry".to_string(),
+                url: "https://crates.io/".to_string(),
+                description: "The official Rust package registry".to_string(),
+            });
+
+            // Keyword-specific crates
+            for keyword in &keywords {
+                crates_io.push(Resource {
+                    title: format!("Crates.io Search: {}", keyword),
+                    url: format!("https://crates.io/search?q={}", keyword),
+                    description: format!("Rust packages related to {}", keyword),
+                });
+            }
+        }
+
+        // Add GitHub repositories if enabled
+        if resources.show_github_repos {
+            // Rust language repository
+            github_repos.push(Resource {
+                title: "Rust Language GitHub Repository".to_string(),
+                url: "https://github.com/rust-lang/rust".to_string(),
+                description: "The official Rust language repository".to_string(),
+            });
+
+            // Keyword-specific repositories
+            for keyword in &keywords {
+                github_repos.push(Resource {
+                    title: format!("GitHub: Rust + {}", keyword),
+                    url: format!("https://github.com/search?q=language:rust+{}", keyword),
+                    description: format!("GitHub repositories related to Rust and {}", keyword),
+                });
+            }
+        }
+
+        Some(AdditionalResources {
+            official_docs,
+            community_resources,
+            crates_io,
+            github_repos,
+        })
+    }
+
+    fn handle_settings_keys(&mut self, key_event: KeyEvent) {
+        match key_event.code {
+            KeyCode::Esc => {
+                // Return to previous screen
+                self.current_state = AppState::Welcome;
+            }
+            KeyCode::Tab => {
+                // Toggle between settings sections
+                self.settings_section = match self.settings_section {
+                    SettingsSection::LearningResources => SettingsSection::ContentCustomization,
+                    SettingsSection::ContentCustomization => SettingsSection::LearningResources,
+                };
+                self.settings_cursor = 0; // Reset cursor when changing sections
+            }
+            KeyCode::Up | KeyCode::Char('k') => {
+                // Move cursor up
+                if self.settings_cursor > 0 {
+                    self.settings_cursor -= 1;
+                }
+            }
+            KeyCode::Down | KeyCode::Char('j') => {
+                // Move cursor down
+                let max_cursor = match self.settings_section {
+                    SettingsSection::LearningResources => 3, // 4 options (0-3)
+                    SettingsSection::ContentCustomization => 2, // 3 options (0-2)
+                };
+                if self.settings_cursor < max_cursor {
+                    self.settings_cursor += 1;
+                }
+            }
+            KeyCode::Enter | KeyCode::Char(' ') => {
+                // Toggle or cycle the selected setting
+                match self.settings_section {
+                    SettingsSection::LearningResources => {
+                        match self.settings_cursor {
+                            0 => { let _ = self.config_service.toggle_official_docs(); }
+                            1 => { let _ = self.config_service.toggle_community_resources(); }
+                            2 => { let _ = self.config_service.toggle_crates_io(); }
+                            3 => { let _ = self.config_service.toggle_github_repos(); }
+                            _ => {}
+                        }
+                    }
+                    SettingsSection::ContentCustomization => {
+                        match self.settings_cursor {
+                            0 => { let _ = self.config_service.cycle_code_complexity(); }
+                            1 => { let _ = self.config_service.cycle_explanation_verbosity(); }
+                            2 => { let _ = self.config_service.cycle_focus_area(); }
+                            _ => {}
+                        }
+                    }
+                }
             }
             _ => {}
         }
