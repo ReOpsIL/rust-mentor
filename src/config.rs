@@ -103,7 +103,7 @@ impl ConfigService {
                 ConfigService { config }
             },
             Err(err) => {
-                tracing::error!("Failed to load config (~/qrust-mentor.conf) - delete config file and rerun.");
+                tracing::error!("Failed to load config (~/rust-mentor.conf) - delete config file and rerun.");
                 std::process::exit(-1);
             }
         }
