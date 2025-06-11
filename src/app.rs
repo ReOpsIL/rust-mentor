@@ -3,7 +3,53 @@ use crate::data;
 use crate::llm::LlmClient;
 use anyhow::Result;
 use crossterm::event::{KeyCode, KeyEvent};
+use serde::{Deserialize, Serialize};
 use tokio::sync::mpsc;
+use std::fmt;
+
+// Define LearningGoal enum for personalized learning paths
+#[derive(PartialEq, Clone, Copy, Serialize, Deserialize, Debug, )]
+pub enum LearningGoal {
+    General,
+    WebDevelopment,
+    SystemsProgramming,
+    DataScience,
+    MicroServices,
+    Bitcoin,
+    OperatingSystems,
+    MicroVM,
+    Graphics,
+    UserInterface,
+    TUI,
+    GPU,
+    Cuda,
+    PyTorch,
+    MachineLearning,
+}
+// Macro to convert enum item to string
+impl fmt::Display for LearningGoal {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let display_str = match self {
+            LearningGoal::General => "General",
+            LearningGoal::WebDevelopment => "Web Development",
+            LearningGoal::SystemsProgramming => "Systems Programming",
+            LearningGoal::DataScience => "Data Science",
+            LearningGoal::MicroServices => "Microservices",
+            LearningGoal::Bitcoin => "Bitcoin",
+            LearningGoal::OperatingSystems => "Operating Systems",
+            LearningGoal::MicroVM => "MicroVM",
+            LearningGoal::Graphics => "Graphics",
+            LearningGoal::UserInterface => "User Interface",
+            LearningGoal::TUI => "TUI",
+            LearningGoal::GPU => "GPU",
+            LearningGoal::Cuda => "Cuda",
+            LearningGoal::PyTorch => "PyTorch",
+            LearningGoal::MachineLearning => "Machine Learning",
+        };
+        write!(f, "{}", display_str)
+    }
+}
+
 
 use crate::prompt_response::{CodeSnippet, Exercise};
 use crate::cargo_project;
@@ -75,6 +121,7 @@ pub struct App {
 pub enum SettingsSection {
     LearningResources,
     ContentCustomization,
+    LearningGoals,
 }
 
 impl App {
@@ -531,10 +578,11 @@ impl App {
                 self.current_state = AppState::Welcome;
             }
             KeyCode::Tab => {
-                // Toggle between settings sections
+                // Cycle through settings sections
                 self.settings_section = match self.settings_section {
                     SettingsSection::LearningResources => SettingsSection::ContentCustomization,
-                    SettingsSection::ContentCustomization => SettingsSection::LearningResources,
+                    SettingsSection::ContentCustomization => SettingsSection::LearningGoals,
+                    SettingsSection::LearningGoals => SettingsSection::LearningResources,
                 };
                 self.settings_cursor = 0; // Reset cursor when changing sections
             }
@@ -549,6 +597,7 @@ impl App {
                 let max_cursor = match self.settings_section {
                     SettingsSection::LearningResources => 3, // 4 options (0-3)
                     SettingsSection::ContentCustomization => 2, // 3 options (0-2)
+                    SettingsSection::LearningGoals => 3, // 4 options (0-3)
                 };
                 if self.settings_cursor < max_cursor {
                     self.settings_cursor += 1;
@@ -573,10 +622,24 @@ impl App {
                             2 => { let _ = self.config_service.cycle_focus_area(); }
                             _ => {}
                         }
+                        
+                    }
+                    SettingsSection::LearningGoals => {
+                        match self.settings_cursor {
+                            0 => { let _ = self.config_service.cycle_learning_goal(); },
+                            1 => { let _ = self.config_service.cycle_learning_goal(); },
+                            2 => { let _ = self.config_service.cycle_learning_goal(); },
+                            3 => { let _ = self.config_service.cycle_learning_goal(); },
+                            _ => {}
+                        }
                     }
                 }
             }
             _ => {}
         }
+    }
+
+    pub fn get_learning_goal(&self) -> LearningGoal {
+        self.config_service.get_content_customization().learning_goal
     }
 }

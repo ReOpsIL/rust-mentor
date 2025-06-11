@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 use std::fs;
 use std::io::Read;
 use toml_edit;
+use crate::app::LearningGoal;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Config {
@@ -24,6 +25,7 @@ pub struct ContentCustomization {
     pub code_complexity: CodeComplexity,
     pub explanation_verbosity: ExplanationVerbosity,
     pub focus_area: FocusArea,
+    pub learning_goal: LearningGoal,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
@@ -71,6 +73,7 @@ impl Config {
                     code_complexity: CodeComplexity::Moderate,
                     explanation_verbosity: ExplanationVerbosity::Moderate,
                     focus_area: FocusArea::Balanced,
+                    learning_goal: LearningGoal::General,
                 },
             };
             let toml = toml::to_string(&default_config)?;
@@ -103,7 +106,7 @@ impl ConfigService {
                 ConfigService { config }
             },
             Err(err) => {
-                tracing::error!("Failed to load config (~/qrust-mentor.conf) - delete config file and rerun.");
+                tracing::error!("Failed to load config (~/rust-mentor.conf) - delete config file and rerun.");
                 std::process::exit(-1);
             }
         }
@@ -197,6 +200,27 @@ impl ConfigService {
             FocusArea::CodeExamples => FocusArea::Exercises,
             FocusArea::Exercises => FocusArea::Balanced,
             FocusArea::Balanced => FocusArea::Concepts,
+        };
+        self.config.save()
+    }
+
+    pub fn cycle_learning_goal(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        self.config.content_customization.learning_goal = match self.config.content_customization.learning_goal {
+            LearningGoal::General => LearningGoal::WebDevelopment,
+            LearningGoal::WebDevelopment => LearningGoal::SystemsProgramming,
+            LearningGoal::SystemsProgramming => LearningGoal::DataScience,
+            LearningGoal::DataScience => LearningGoal::MicroServices,
+            LearningGoal::MicroServices => LearningGoal::Bitcoin,
+            LearningGoal::Bitcoin => LearningGoal::OperatingSystems,
+            LearningGoal::OperatingSystems => LearningGoal::MicroVM,
+            LearningGoal::MicroVM => LearningGoal::Graphics,
+            LearningGoal::Graphics => LearningGoal::UserInterface,
+            LearningGoal::UserInterface => LearningGoal::TUI,
+            LearningGoal::TUI => LearningGoal::GPU,
+            LearningGoal::GPU => LearningGoal::Cuda,
+            LearningGoal::Cuda => LearningGoal::PyTorch,
+            LearningGoal::PyTorch => LearningGoal::MachineLearning,
+            LearningGoal::MachineLearning => LearningGoal::General,
         };
         self.config.save()
     }

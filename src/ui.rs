@@ -1,5 +1,5 @@
 // src/ui.rs
-use crate::app::{App, AppState, SettingsSection};
+use crate::app::{App, AppState, SettingsSection, LearningGoal};
 use crate::config::{CodeComplexity, ExplanationVerbosity, FocusArea};
 use lazy_static::lazy_static;
 use ratatui::prelude::*;
@@ -517,6 +517,7 @@ pub fn render_settings_view(frame: &mut Frame, app: &App, layout: &[Rect]) {
     let sections = vec![
         "Learning Resources",
         "Content Customization",
+        "Learning Goals",
     ];
 
     let mut section_lines = Vec::new();
@@ -524,6 +525,7 @@ pub fn render_settings_view(frame: &mut Frame, app: &App, layout: &[Rect]) {
         let is_selected = match (i, &app.settings_section) {
             (0, SettingsSection::LearningResources) => true,
             (1, SettingsSection::ContentCustomization) => true,
+            (2, SettingsSection::LearningGoals) => true,
             _ => false,
         };
 
@@ -549,6 +551,9 @@ pub fn render_settings_view(frame: &mut Frame, app: &App, layout: &[Rect]) {
         }
         SettingsSection::ContentCustomization => {
             render_content_customization_settings(frame, app, settings_layout[1]);
+        }
+        SettingsSection::LearningGoals => {
+            render_learning_goals_settings(frame, app, settings_layout[1]);
         }
     }
 
@@ -704,129 +709,161 @@ fn render_content_customization_settings(frame: &mut Frame, app: &App, area: Rec
         .block(Block::default().borders(Borders::NONE).title("Options"));
     frame.render_widget(options_widget, area);
 }
+fn render_learning_goals_settings(frame: &mut Frame, app: &App, area: Rect) {
+        let learning_goal = app.get_learning_goal();
+        let goal_text = learning_goal.to_string();
 
-pub fn render_help_modal(frame: &mut Frame) {
-    // Calculate a centered rect for the modal
-    let area = centered_rect(60, 60, frame.size());
+        let mut option_lines = Vec::new();
+        option_lines.push(Line::from(vec![Span::styled(
+            "Learning Goals Settings",
+            Style::default().add_modifier(Modifier::BOLD),
+        )]));
+        option_lines.push(Line::from(""));
 
-    // Create the help content
-    let help_text = vec![
-        Line::from("Global Keybindings:"),
-        Line::from("  ? - Toggle help"),
-        Line::from("  q - Quit"),
-        Line::from("  s - Open settings"),
-        Line::from(""),
-        Line::from("Welcome Screen:"),
-        Line::from("  k/↑, j/↓ - Change level"),
-        Line::from("  Enter - Proceed to index selection"),
-        Line::from(""),
-        Line::from("Index Selection Screen:"),
-        Line::from("  k/↑, j/↓ - Change selection"),
-        Line::from("  Enter - Confirm selection and generate module"),
-        Line::from("  Esc - Return to welcome screen"),
-        Line::from(""),
-        Line::from("Learning Screen:"),
-        Line::from("  k/↑, j/↓ - Scroll content"),
-        Line::from("  n - Request new module"),
-        Line::from("  Esc - Return to welcome screen"),
-        Line::from(""),
-        Line::from("Settings Screen:"),
-        Line::from("  Tab - Switch between sections"),
-        Line::from("  k/↑, j/↓ - Navigate options"),
-        Line::from("  Enter/Space - Toggle or cycle selected option"),
-        Line::from("  Esc - Return to welcome screen"),
-    ];
+        // Learning Goal
+        let goal_line = if app.settings_cursor == 0 {
+            Line::from(vec![Span::styled(
+                format!("> Learning Goal: [{}]", goal_text),
+                Style::default().fg(Color::Black).bg(Color::LightYellow),
+            )])
+        } else {
+            Line::from(vec![Span::raw(
+                format!("  Learning Goal: [{}]", goal_text),
+            )])
+        };
+        option_lines.push(goal_line);
+    
+        option_lines.push(Line::from(""));
+        option_lines.push(Line::from("These settings control the focus of your learning path in Rust."));
 
-    let help_content = Paragraph::new(help_text).block(
-        Block::default()
-            .title("Keybindings")
-            .borders(Borders::ALL)
-            .border_type(BorderType::Rounded),
-    );
+        let options_widget = Paragraph::new(option_lines)
+            .block(Block::default().borders(Borders::NONE).title("Options"));
+        frame.render_widget(options_widget, area);
+    }
 
-    render_modal(frame, area, help_content);
-}
+    pub fn render_help_modal(frame: &mut Frame) {
+        // Calculate a centered rect for the modal
+        let area = centered_rect(60, 60, frame.size());
 
-pub fn render_quit_modal(frame: &mut Frame, app: &App) {
-    // Calculate a small centered rect for the modal
-    let area = centered_rect(40, 20, frame.size());
+        // Create the help content
+        let help_text = vec![
+            Line::from("Global Keybindings:"),
+            Line::from("  ? - Toggle help"),
+            Line::from("  q - Quit"),
+            Line::from("  s - Open settings"),
+            Line::from(""),
+            Line::from("Welcome Screen:"),
+            Line::from("  k/↑, j/↓ - Change level"),
+            Line::from("  Enter - Proceed to index selection"),
+            Line::from(""),
+            Line::from("Index Selection Screen:"),
+            Line::from("  k/↑, j/↓ - Change selection"),
+            Line::from("  Enter - Confirm selection and generate module"),
+            Line::from("  Esc - Return to welcome screen"),
+            Line::from(""),
+            Line::from("Learning Screen:"),
+            Line::from("  k/↑, j/↓ - Scroll content"),
+            Line::from("  n - Request new module"),
+            Line::from("  Esc - Return to welcome screen"),
+            Line::from(""),
+            Line::from("Settings Screen:"),
+            Line::from("  Tab - Switch between sections"),
+            Line::from("  k/↑, j/↓ - Navigate options"),
+            Line::from("  Enter/Space - Toggle or cycle selected option"),
+            Line::from("  Esc - Return to welcome screen"),
+        ];
 
-    // Create the quit confirmation content
-    let options = Line::from(vec![
-        Span::raw("[ "),
-        Span::styled(
-            "Yes",
-            Style::default().add_modifier(if app.quit_confirmation_selected {
-                Modifier::REVERSED
-            } else {
-                Modifier::empty()
-            }),
-        ),
-        Span::raw(" ] [ "),
-        Span::styled(
-            "No",
-            Style::default().add_modifier(if !app.quit_confirmation_selected {
-                Modifier::REVERSED
-            } else {
-                Modifier::empty()
-            }),
-        ),
-        Span::raw(" ]"),
-    ]);
+        let help_content = Paragraph::new(help_text).block(
+            Block::default()
+                .title("Keybindings")
+                .borders(Borders::ALL)
+                .border_type(BorderType::Rounded),
+        );
 
-    let quit_content = Paragraph::new(vec![
-        Line::from("Are you sure you want to quit?"),
-        Line::from(""),
-        options,
-    ])
-    .alignment(Alignment::Center)
-    .block(
-        Block::default()
-            .borders(Borders::ALL)
-            .border_type(BorderType::Rounded),
-    );
+        render_modal(frame, area, help_content);
+    }
 
-    render_modal(frame, area, quit_content);
-}
+    pub fn render_quit_modal(frame: &mut Frame, app: &App) {
+        // Calculate a small centered rect for the modal
+        let area = centered_rect(40, 20, frame.size());
 
-pub fn render_level_too_low_popup(frame: &mut Frame) {
-    // Calculate a small centered rect for the modal
-    let area = centered_rect(60, 20, frame.size());
+        // Create the quit confirmation content
+        let options = Line::from(vec![
+            Span::raw("[ "),
+            Span::styled(
+                "Yes",
+                Style::default().add_modifier(if app.quit_confirmation_selected {
+                    Modifier::REVERSED
+                } else {
+                    Modifier::empty()
+                }),
+            ),
+            Span::raw(" ] [ "),
+            Span::styled(
+                "No",
+                Style::default().add_modifier(if !app.quit_confirmation_selected {
+                    Modifier::REVERSED
+                } else {
+                    Modifier::empty()
+                }),
+            ),
+            Span::raw(" ]"),
+        ]);
 
-    // Create the level too low content
-    let content = Paragraph::new(vec![
-        Line::from("For library subject - you need to be a level 3 programmer (or higher)"),
-        Line::from(""),
-        Line::from("Returning to programmer level selection..."),
-    ])
-    .alignment(Alignment::Center)
-    .block(
-        Block::default()
-            .title("Level Too Low")
-            .borders(Borders::ALL)
-            .border_type(BorderType::Rounded),
-    );
-
-    render_modal(frame, area, content);
-}
-
-// Helper function to create a centered rect
-fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
-    let popup_layout = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints([
-            Constraint::Percentage((100 - percent_y) / 2),
-            Constraint::Percentage(percent_y),
-            Constraint::Percentage((100 - percent_y) / 2),
+        let quit_content = Paragraph::new(vec![
+            Line::from("Are you sure you want to quit?"),
+            Line::from(""),
+            options,
         ])
-        .split(r);
+            .alignment(Alignment::Center)
+            .block(
+                Block::default()
+                    .borders(Borders::ALL)
+                    .border_type(BorderType::Rounded),
+            );
 
-    Layout::default()
-        .direction(Direction::Horizontal)
-        .constraints([
-            Constraint::Percentage((100 - percent_x) / 2),
-            Constraint::Percentage(percent_x),
-            Constraint::Percentage((100 - percent_x) / 2),
+        render_modal(frame, area, quit_content);
+    }
+
+    pub fn render_level_too_low_popup(frame: &mut Frame) {
+        // Calculate a small centered rect for the modal
+        let area = centered_rect(60, 20, frame.size());
+
+        // Create the level too low content
+        let content = Paragraph::new(vec![
+            Line::from("For library subject - you need to be a level 3 programmer (or higher)"),
+            Line::from(""),
+            Line::from("Returning to programmer level selection..."),
         ])
-        .split(popup_layout[1])[1]
-}
+            .alignment(Alignment::Center)
+            .block(
+                Block::default()
+                    .title("Level Too Low")
+                    .borders(Borders::ALL)
+                    .border_type(BorderType::Rounded),
+            );
+
+        render_modal(frame, area, content);
+    }
+
+    // Helper function to create a centered rect
+    fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
+        let popup_layout = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([
+                Constraint::Percentage((100 - percent_y) / 2),
+                Constraint::Percentage(percent_y),
+                Constraint::Percentage((100 - percent_y) / 2),
+            ])
+            .split(r);
+
+        Layout::default()
+            .direction(Direction::Horizontal)
+            .constraints([
+                Constraint::Percentage((100 - percent_x) / 2),
+                Constraint::Percentage(percent_x),
+                Constraint::Percentage((100 - percent_x) / 2),
+            ])
+            .split(popup_layout[1])[1]
+    }
+

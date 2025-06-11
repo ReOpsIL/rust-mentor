@@ -140,11 +140,13 @@ impl LlmClient {
             crate::config::FocusArea::Balanced => "Provide a balanced mix of concepts, code examples, and exercises.",
         };
 
+        let learning_goal = customization.learning_goal.to_string();
+
         // The refined prompt is much more explicit and strict.
         format!(
             r#"
 You are an expert Rust programming language tutor and a specialist in generating structured data.
-Your task is to create a learning module about the topic '{topic}' for a Rust programmer at the '{level_description}' level.
+Your task is to create a learning module about the topic '{topic}' for a Rust programmer at the '{level_description}' level but focus on  '{learning_goal}' leaning goal subjet.
 
 **Output Formatting Rules:**
 - Your output should be *only* the text of the prompt described above.
@@ -185,7 +187,7 @@ Your task is to create a learning module about the topic '{topic}' for a Rust pr
     ```
 
 **Content Guidelines:**
--   `explanation`: Provide a {verbosity_text} explanation of the topic, tailored to the '{level_description}' level.
+-   `explanation`: Provide a {verbosity_text} explanation of the topic, tailored to the '{level_description}' level while focusing on subject "'{learning_goal}'" as the learning goal.
 -   `code_snippets`: Provide several complete, runnable, and well-commented Rust code examples. The code should be {complexity_text}, appropriate for the target level.
 -   `exercises`: Provide several distinct practice exercises. They should be clear problem statements that allow the user to apply the concepts from the explanation and code snippets.
 -   {focus_instruction}
