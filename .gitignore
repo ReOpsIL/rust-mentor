@@ -10,3 +10,4 @@ Cargo.lock
 # IDEs
 .vscode/
 .idea/
+docs/.DS_Store
