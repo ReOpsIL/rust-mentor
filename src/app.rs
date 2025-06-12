@@ -10,21 +10,50 @@ use std::fmt;
 // Define LearningGoal enum for personalized learning paths
 #[derive(PartialEq, Clone, Copy, Serialize, Deserialize, Debug, )]
 pub enum LearningGoal {
-    General,
-    WebDevelopment,
-    SystemsProgramming,
-    DataScience,
-    MicroServices,
+    ARVR, // Augmented Reality / Virtual Reality
+    AsyncProgramming,
+    BigData,
+    Bioinformatics,
     Bitcoin,
-    OperatingSystems,
-    MicroVM,
+    CloudComputing,
+    ComputerVision,
+    Concurrency,
+    Cuda, // Compute Unified Device Architecture (for GPU programming)
+    Cybersecurity,
+    DICOM, // (Medical Imaging standard)
+    DataScience,
+    Databases,
+    DeepLearning,
+    DevOps,
+    DistributedSystems,
+    EdgeComputing,
+    EmbeddedSystems,
+    EthicalAI,
+    GANs, // Generative Adversarial Networks (Deep Learning)
+    GPU, // Graphics Processing Unit
+    General,
     Graphics,
-    UserInterface,
-    TUI,
-    GPU,
-    Cuda,
-    PyTorch,
+    HL7, // (Medical data exchange standard)
+    ImageProcessing, // Often a component of Computer Vision
     MachineLearning,
+    MedicalImaging,
+    MicroServices,
+    MicroVM,
+    NaturalLanguageProcessing, // NLP
+    Networking,
+    OperatingSystems,
+    PyTorch,
+    QuantumComputing,
+    ROS, // Robot Operating System
+    ReinforcementLearning,
+    Robotics,
+    SLAM, // Simultaneous Localization and Mapping (Robotics, AR/VR)
+    SensorFusion, // Relevant to Robotics and CV
+    SystemsProgramming,
+    TUI, // Terminal User Interface
+    Transformers, // (Deep Learning, NLP)
+    UserInterface,
+    WebDevelopment,
 }
 // Macro to convert enum item to string
 impl fmt::Display for LearningGoal {
@@ -45,6 +74,35 @@ impl fmt::Display for LearningGoal {
             LearningGoal::Cuda => "Cuda",
             LearningGoal::PyTorch => "PyTorch",
             LearningGoal::MachineLearning => "Machine Learning",
+            LearningGoal::Networking => "Networking",
+            LearningGoal::Databases => "Databases",
+            LearningGoal::Concurrency => "Concurrency",
+            LearningGoal::AsyncProgramming => "Async Programming",
+            LearningGoal::ARVR => "AR/VR",
+            LearningGoal::BigData => "Big Data",
+            LearningGoal::Bioinformatics => "Bioinformatics",
+            LearningGoal::CloudComputing => "Cloud Computing",
+            LearningGoal::ComputerVision => "Computer Vision",
+            LearningGoal::Cybersecurity => "Cybersecurity",
+            LearningGoal::DICOM => "DICOM",
+            LearningGoal::DeepLearning => "Deep Learning",
+            LearningGoal::DevOps => "DevOps",
+            LearningGoal::DistributedSystems => "Distributed Systems",
+            LearningGoal::EdgeComputing => "Edge Computing",
+            LearningGoal::EmbeddedSystems => "Embedded Systems",
+            LearningGoal::EthicalAI => "Ethical AI",
+            LearningGoal::GANs => "GANs",
+            LearningGoal::HL7 => "HL7",
+            LearningGoal::ImageProcessing => "Image Processing",
+            LearningGoal::MedicalImaging => "Medical Imaging",
+            LearningGoal::NaturalLanguageProcessing => "Natural Language Processing",
+            LearningGoal::QuantumComputing => "Quantum Computing",
+            LearningGoal::ROS => "ROS",
+            LearningGoal::ReinforcementLearning => "Reinforcement Learning",
+            LearningGoal::Robotics => "Robotics",
+            LearningGoal::SLAM => "SLAM",
+            LearningGoal::SensorFusion => "Sensor Fusion",
+            LearningGoal::Transformers => "Transformers"
         };
         write!(f, "{}", display_str)
     }
@@ -586,13 +644,13 @@ impl App {
                 };
                 self.settings_cursor = 0; // Reset cursor when changing sections
             }
-            KeyCode::Up | KeyCode::Char('k') => {
+            KeyCode::Up | KeyCode::Char('i') => {
                 // Move cursor up
                 if self.settings_cursor > 0 {
                     self.settings_cursor -= 1;
                 }
             }
-            KeyCode::Down | KeyCode::Char('j') => {
+            KeyCode::Down | KeyCode::Char('m') => {
                 // Move cursor down
                 let max_cursor = match self.settings_section {
                     SettingsSection::LearningResources => 3, // 4 options (0-3)
@@ -603,7 +661,7 @@ impl App {
                     self.settings_cursor += 1;
                 }
             }
-            KeyCode::Enter | KeyCode::Char(' ') => {
+            KeyCode::Right | KeyCode::Char('k')  => {
                 // Toggle or cycle the selected setting
                 match self.settings_section {
                     SettingsSection::LearningResources => {
@@ -630,6 +688,38 @@ impl App {
                             1 => { let _ = self.config_service.cycle_learning_goal(); },
                             2 => { let _ = self.config_service.cycle_learning_goal(); },
                             3 => { let _ = self.config_service.cycle_learning_goal(); },
+                            _ => {}
+                        }
+                    }
+                }
+            },
+            KeyCode::Left | KeyCode::Char('j')  => {
+                // Toggle or cycle the selected setting
+                match self.settings_section {
+                    SettingsSection::LearningResources => {
+                        match self.settings_cursor {
+                            0 => { let _ = self.config_service.toggle_official_docs(); }
+                            1 => { let _ = self.config_service.toggle_community_resources(); }
+                            2 => { let _ = self.config_service.toggle_crates_io(); }
+                            3 => { let _ = self.config_service.toggle_github_repos(); }
+                            _ => {}
+                        }
+                    }
+                    SettingsSection::ContentCustomization => {
+                        match self.settings_cursor {
+                            0 => { let _ = self.config_service.cycle_code_complexity_reverse(); }
+                            1 => { let _ = self.config_service.cycle_explanation_verbosity_reverse(); }
+                            2 => { let _ = self.config_service.cycle_focus_area_reverse(); }
+                            _ => {}
+                        }
+
+                    }
+                    SettingsSection::LearningGoals => {
+                        match self.settings_cursor {
+                            0 => { let _ = self.config_service.cycle_learning_goal_reverse(); },
+                            1 => { let _ = self.config_service.cycle_learning_goal_reverse(); },
+                            2 => { let _ = self.config_service.cycle_learning_goal_reverse(); },
+                            3 => { let _ = self.config_service.cycle_learning_goal_reverse(); },
                             _ => {}
                         }
                     }

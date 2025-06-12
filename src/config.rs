@@ -185,6 +185,15 @@ impl ConfigService {
         self.config.save()
     }
 
+    pub fn cycle_code_complexity_reverse(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        self.config.content_customization.code_complexity = match self.config.content_customization.code_complexity {
+            CodeComplexity::Simple => CodeComplexity::Complex,
+            CodeComplexity::Moderate => CodeComplexity::Simple,
+            CodeComplexity::Complex => CodeComplexity::Moderate,
+        };
+        self.config.save()
+    }
+
     pub fn cycle_explanation_verbosity(&mut self) -> Result<(), Box<dyn std::error::Error>> {
         self.config.content_customization.explanation_verbosity = match self.config.content_customization.explanation_verbosity {
             ExplanationVerbosity::Concise => ExplanationVerbosity::Moderate,
@@ -194,6 +203,15 @@ impl ConfigService {
         self.config.save()
     }
 
+    pub fn cycle_explanation_verbosity_reverse(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        self.config.content_customization.explanation_verbosity = match self.config.content_customization.explanation_verbosity {
+            ExplanationVerbosity::Concise => ExplanationVerbosity::Detailed,
+            ExplanationVerbosity::Moderate => ExplanationVerbosity::Concise,
+            ExplanationVerbosity::Detailed => ExplanationVerbosity::Moderate,
+        };
+        self.config.save()
+    }
+    
     pub fn cycle_focus_area(&mut self) -> Result<(), Box<dyn std::error::Error>> {
         self.config.content_customization.focus_area = match self.config.content_customization.focus_area {
             FocusArea::Concepts => FocusArea::CodeExamples,
@@ -204,23 +222,112 @@ impl ConfigService {
         self.config.save()
     }
 
+    pub fn cycle_focus_area_reverse(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        self.config.content_customization.focus_area = match self.config.content_customization.focus_area {
+            FocusArea::Concepts => FocusArea::Balanced,
+            FocusArea::CodeExamples => FocusArea::Concepts,
+            FocusArea::Exercises => FocusArea::CodeExamples,
+            FocusArea::Balanced => FocusArea::Exercises,
+        };
+        self.config.save()
+    }
+
     pub fn cycle_learning_goal(&mut self) -> Result<(), Box<dyn std::error::Error>> {
         self.config.content_customization.learning_goal = match self.config.content_customization.learning_goal {
-            LearningGoal::General => LearningGoal::WebDevelopment,
-            LearningGoal::WebDevelopment => LearningGoal::SystemsProgramming,
-            LearningGoal::SystemsProgramming => LearningGoal::DataScience,
-            LearningGoal::DataScience => LearningGoal::MicroServices,
-            LearningGoal::MicroServices => LearningGoal::Bitcoin,
-            LearningGoal::Bitcoin => LearningGoal::OperatingSystems,
-            LearningGoal::OperatingSystems => LearningGoal::MicroVM,
-            LearningGoal::MicroVM => LearningGoal::Graphics,
-            LearningGoal::Graphics => LearningGoal::UserInterface,
-            LearningGoal::UserInterface => LearningGoal::TUI,
-            LearningGoal::TUI => LearningGoal::GPU,
-            LearningGoal::GPU => LearningGoal::Cuda,
-            LearningGoal::Cuda => LearningGoal::PyTorch,
-            LearningGoal::PyTorch => LearningGoal::MachineLearning,
-            LearningGoal::MachineLearning => LearningGoal::General,
+            LearningGoal::ARVR => LearningGoal::AsyncProgramming,
+            LearningGoal::AsyncProgramming => LearningGoal::BigData,
+            LearningGoal::BigData => LearningGoal::Bioinformatics,
+            LearningGoal::Bioinformatics => LearningGoal::Bitcoin,
+            LearningGoal::Bitcoin => LearningGoal::CloudComputing,
+            LearningGoal::CloudComputing => LearningGoal::ComputerVision,
+            LearningGoal::ComputerVision => LearningGoal::Concurrency,
+            LearningGoal::Concurrency => LearningGoal::Cuda,
+            LearningGoal::Cuda => LearningGoal::Cybersecurity,
+            LearningGoal::Cybersecurity => LearningGoal::DICOM,
+            LearningGoal::DICOM => LearningGoal::DataScience,
+            LearningGoal::DataScience => LearningGoal::Databases,
+            LearningGoal::Databases => LearningGoal::DeepLearning,
+            LearningGoal::DeepLearning => LearningGoal::DevOps,
+            LearningGoal::DevOps => LearningGoal::DistributedSystems,
+            LearningGoal::DistributedSystems => LearningGoal::EdgeComputing,
+            LearningGoal::EdgeComputing => LearningGoal::EmbeddedSystems,
+            LearningGoal::EmbeddedSystems => LearningGoal::EthicalAI,
+            LearningGoal::EthicalAI => LearningGoal::GANs,
+            LearningGoal::GANs => LearningGoal::GPU,
+            LearningGoal::GPU => LearningGoal::General,
+            LearningGoal::General => LearningGoal::Graphics,
+            LearningGoal::Graphics => LearningGoal::HL7,
+            LearningGoal::HL7 => LearningGoal::ImageProcessing,
+            LearningGoal::ImageProcessing => LearningGoal::MachineLearning,
+            LearningGoal::MachineLearning => LearningGoal::MedicalImaging,
+            LearningGoal::MedicalImaging => LearningGoal::MicroServices,
+            LearningGoal::MicroServices => LearningGoal::MicroVM,
+            LearningGoal::MicroVM => LearningGoal::NaturalLanguageProcessing,
+            LearningGoal::NaturalLanguageProcessing => LearningGoal::Networking,
+            LearningGoal::Networking => LearningGoal::OperatingSystems,
+            LearningGoal::OperatingSystems => LearningGoal::PyTorch,
+            LearningGoal::PyTorch => LearningGoal::QuantumComputing,
+            LearningGoal::QuantumComputing => LearningGoal::ROS,
+            LearningGoal::ROS => LearningGoal::ReinforcementLearning,
+            LearningGoal::ReinforcementLearning => LearningGoal::Robotics,
+            LearningGoal::Robotics => LearningGoal::SLAM,
+            LearningGoal::SLAM => LearningGoal::SensorFusion,
+            LearningGoal::SensorFusion => LearningGoal::SystemsProgramming,
+            LearningGoal::SystemsProgramming => LearningGoal::TUI,
+            LearningGoal::TUI => LearningGoal::Transformers,
+            LearningGoal::Transformers => LearningGoal::UserInterface,
+            LearningGoal::UserInterface => LearningGoal::WebDevelopment,
+            LearningGoal::WebDevelopment => LearningGoal::ARVR,
+        };
+        self.config.save()
+    }
+
+    pub fn cycle_learning_goal_reverse(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        self.config.content_customization.learning_goal = match self.config.content_customization.learning_goal {
+            LearningGoal::ARVR => LearningGoal::WebDevelopment,
+            LearningGoal::AsyncProgramming => LearningGoal::ARVR,
+            LearningGoal::BigData => LearningGoal::AsyncProgramming,
+            LearningGoal::Bioinformatics => LearningGoal::BigData,
+            LearningGoal::Bitcoin => LearningGoal::Bioinformatics,
+            LearningGoal::CloudComputing => LearningGoal::Bitcoin,
+            LearningGoal::ComputerVision => LearningGoal::CloudComputing,
+            LearningGoal::Concurrency => LearningGoal::ComputerVision,
+            LearningGoal::Cuda => LearningGoal::Concurrency,
+            LearningGoal::Cybersecurity => LearningGoal::Cuda,
+            LearningGoal::DICOM => LearningGoal::Cybersecurity,
+            LearningGoal::DataScience => LearningGoal::DICOM,
+            LearningGoal::Databases => LearningGoal::DataScience,
+            LearningGoal::DeepLearning => LearningGoal::Databases,
+            LearningGoal::DevOps => LearningGoal::DeepLearning,
+            LearningGoal::DistributedSystems => LearningGoal::DevOps,
+            LearningGoal::EdgeComputing => LearningGoal::DistributedSystems,
+            LearningGoal::EmbeddedSystems => LearningGoal::EdgeComputing,
+            LearningGoal::EthicalAI => LearningGoal::EmbeddedSystems,
+            LearningGoal::GANs => LearningGoal::EthicalAI,
+            LearningGoal::GPU => LearningGoal::GANs,
+            LearningGoal::General => LearningGoal::GPU,
+            LearningGoal::Graphics => LearningGoal::General,
+            LearningGoal::HL7 => LearningGoal::Graphics,
+            LearningGoal::ImageProcessing => LearningGoal::HL7,
+            LearningGoal::MachineLearning => LearningGoal::ImageProcessing,
+            LearningGoal::MedicalImaging => LearningGoal::MachineLearning,
+            LearningGoal::MicroServices => LearningGoal::MedicalImaging,
+            LearningGoal::MicroVM => LearningGoal::MicroServices,
+            LearningGoal::NaturalLanguageProcessing => LearningGoal::MicroVM,
+            LearningGoal::Networking => LearningGoal::NaturalLanguageProcessing,
+            LearningGoal::OperatingSystems => LearningGoal::Networking,
+            LearningGoal::PyTorch => LearningGoal::OperatingSystems,
+            LearningGoal::QuantumComputing => LearningGoal::PyTorch,
+            LearningGoal::ROS => LearningGoal::QuantumComputing,
+            LearningGoal::ReinforcementLearning => LearningGoal::ROS,
+            LearningGoal::Robotics => LearningGoal::ReinforcementLearning,
+            LearningGoal::SLAM => LearningGoal::Robotics,
+            LearningGoal::SensorFusion => LearningGoal::SLAM,
+            LearningGoal::SystemsProgramming => LearningGoal::SensorFusion,
+            LearningGoal::TUI => LearningGoal::SystemsProgramming,
+            LearningGoal::Transformers => LearningGoal::TUI,
+            LearningGoal::UserInterface => LearningGoal::Transformers,
+            LearningGoal::WebDevelopment => LearningGoal::UserInterface,
         };
         self.config.save()
     }
