@@ -206,7 +206,7 @@ The navigation is **modal and context-driven**, designed for simplicity and disc
 | Rust AI Mentor :: Settings                                               |
 +--------------------------------------------------------------------------+
 |                                                                          |
-| [Model Selection] [Learning Resources] [Content Customization]           |
+| [Model Selection] [Learning Resources] [Content Customization] [Learning Goals] |
 |                                                                          |
 | Learning Resources:                                                      |
 |                                                                          |
@@ -227,6 +227,8 @@ The navigation is **modal and context-driven**, designed for simplicity and disc
 | (Tab) Switch Section | (k/↑, j/↓) Navigate | (Space) Toggle | (Esc) Back |
 +--------------------------------------------------------------------------+
 ```
+
+*Note: The Content Customization section includes options for Code Complexity (Simple, Moderate, Complex), Explanation Verbosity (Concise, Moderate, Detailed), and Focus Area (Concepts, Code Examples, Exercises, Balanced). The Learning Goals section allows users to select from a wide range of specialized domains (General, Web Development, Systems Programming, Data Science, Machine Learning, etc.).*
 
 ### **Wireframe 4: Help Modal (Overlay)**
 

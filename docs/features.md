@@ -138,6 +138,7 @@ This document outlines the features for the Rust AI Mentor application, based on
       - Code Complexity: Simple, Moderate, or Complex
       - Explanation Verbosity: Concise, Moderate, or Detailed
       - Focus Area: Concepts, Code Examples, Exercises, or Balanced
+      - Learning Goal: Select from a wide range of specialized domains (General, Web Development, Systems Programming, Data Science, Machine Learning, etc.)
 *   **Purpose & User Benefit:** Provides fine-grained control over the learning experience, allowing users to adjust
       the content to match their learning style and preferences. This addresses different learning approaches and helps
       users focus on areas they want to improve.
@@ -154,7 +155,7 @@ This document outlines the features for the Rust AI Mentor application, based on
       Settings include:
       - LLM model selection
       - Learning resources visibility
-      - Content customization (complexity, verbosity, focus)
+      - Content customization (complexity, verbosity, focus, learning goal)
 *   **Purpose & User Benefit:** Provides a centralized, user-friendly interface for managing all application settings.
       This makes it easy for users to experiment with different configurations to find what works best for their learning style.
 *   **Support for App Goals:** Supports the "Core TUI" requirement by extending the interface to include settings management.

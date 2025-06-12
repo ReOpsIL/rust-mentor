@@ -95,7 +95,7 @@ The MVP will be developed in four distinct phases, building from the foundation 
         *   Add configuration options for toggling visibility of different learning resources
         *   Update the UI to display or hide resources based on user preferences
     *   **F009:** Implement Content Customization
-        *   Add configuration options for code complexity, explanation verbosity, and focus area
+        *   Add configuration options for code complexity, explanation verbosity, focus area, and learning goal
         *   Update the LLM prompt generation to incorporate these customization options
     *   **F010:** Implement Settings Management
         *   Create a dedicated Settings View in the TUI
