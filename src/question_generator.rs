@@ -4,6 +4,7 @@ use crate::llm::LlmClient;
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::fmt;
+use regex::Regex;
 
 /// Represents a question type
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -24,7 +25,7 @@ impl fmt::Display for QuestionType {
 /// Represents an answer option for multiple choice questions
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AnswerOption {
-    pub id: String,       // "1", "2", "3", "4" or "a", "b", "c", "d"
+    pub id: String,       // "1", "2", "3", "4" or "a", "b", "c", "d" or "y", "n"
     pub text: String,     // The answer text
 }
 
@@ -128,35 +129,75 @@ impl QuestionGenerator {
     /// Create a prompt for generating questions
     fn create_questions_prompt(&self, topic: &str, learning_goal: &LearningGoal, num_questions: usize) -> String {
         format!(
-            r#"You are RustMentor, an AI assistant specialized in teaching Rust programming.
+            r#"
+You are **RustMentor**, an AI assistant specialized in teaching Rust programming through hands-on application development.
 
-I need you to generate {num_questions} questions about {topic} in the context of {learning_goal}.
+Your task is to generate `{num_questions}` creative and engaging questions about `{topic}` in the context of `{learning_goal}`. These questions are not meant to assess knowledge directly, but to **explore user preferences, goals, and inspirations** — ultimately guiding an LLM to generate a **unique Rust application** tailored to the user’s responses.
 
-Generate a mix of binary (yes/no) and multiple choice questions (with 4 options each).
-The questions will eventualy guide an LLM how to create a sample application related to the user requested topic and as part of the user learning goal. The questions should be innovative, can relate to cool features, sub subjects etc.. bu all related to the learned topic and learning goal.
+The questions should cover:
 
-For each question, provide:
+* The desired *application type or use case*
+* Preferred *features or modules*
+* Relevant *subtopics* or *technologies*
+* Possible *styles*, *formats*, or *interaction modes*
+* Any innovative or unexpected directions the app could take
+* If the question contains multiple options (See examples)  then the answer section should include multiple options and not an answer with only Yes No options.
+
+Example 1 ( multiple answers ):
+----------------
+Question:
+Imagine you could build a Rust application that helps people explore their creativity. 
+Would you be more interested in an application that:
+
+Answer Options:
+(1) Generates abstract art based on user-defined mathematical functions and color palettes?
+(2) Creates interactive musical compositions driven by real-time sensor data (like microphone input or accelerometer)?
+(3) Develops a collaborative storytelling platform using Rust's concurrency features for multiple writers?
+(4) Constructs a procedurally generated world for a text-based adventure game where the world's geography and lore are dynamically created?
+----------------
+
+Example 2  ( yes no answers ):
+----------------
+Question: Would you prefer your Rust application to be more sutable for addults in terms of font size ?
+(Y) Yes   (N) No
+----------------
+
+
+* You should mix **binary (yes/no)** and **multiple choice** (with 4 imaginative options) question types.
+* Multiple choice questions should include varied and creative options that spark curiosity and decision-making. 
+* Fill in blanks with **inventive**, **fun**, or **technically intriguing** ideas, always within the boundaries of `{topic}` and `{learning_goal}`.
+
+For each question, include:
+
 1. The question text
-2. The question type (binary or multiple)
-3. For multiple choice questions, provide 4 options labeled 1-4
+2. The question type: `binary` or `multiple`
+3. For multiple choice, provide 4 options labeled `1–4` with parentheses eg. (1) (2) (3) (4),
+4. For yes no questions only, provide 2 options labeled `Y` `N` with parentheses eg. (Y) (N),
 
-Format your response as follows:
 
+**Format the output like this:**
+
+```
 <<<question:1>>>
-[QUESTION TEXT]
-[TYPE: binary/multiple]
+[QUESTION TEXT ONLY - WITHOUT OPTIONS]
+[TYPE: multiple]
 [OPTIONS (only for multiple choice):
-1. Option 1
-2. Option 2
-3. Option 3
-4. Option 4]
+(1) Option 1
+(2) Option 2
+(3) Option 3
+(4) Option 4]
 <<<end>>>
 
 <<<question:2>>>
-...
+[QUESTION TEXT ONLY - WITHOUT OPTIONS]
+[TYPE: binary]
+[YESNO (only for yes no choice):
+(Y) Yes
+(N) No]
+<<<end>>>
+```
 
-Make sure the questions are relevant to {topic} and {learning_goal}, and cover different aspects of the topic.
-The questions should help assess the user's understanding of the topic and guide the generation of a Rust application.
+Make sure all questions help steer the LLM toward designing a complete, compelling, and technically educational **Rust app**, aligned with the topic `{topic}` and the learner’s goal `{learning_goal}`.
 "#
         )
     }
@@ -218,17 +259,23 @@ The questions should help assess the user's understanding of the topic and guide
                     } else {
                         QuestionType::Binary
                     };
-                } else if line.starts_with("[OPTIONS") {
+                } else if line.starts_with("[OPTIONS") || line.starts_with("[YESNO") {
                     // Start of options section
                     in_options = true;
                 } else if line.ends_with("]") && in_options {
                     // End of options section
                     in_options = false;
                 } else if in_options && current_type == QuestionType::Multiple {
-                    // Parse option lines - look for patterns like "1. Text" or "a. Text"
-                    if let Some(pos) = line.find('.') {
-                        let id = line[..pos].trim();
-                        let text = line[pos + 1..].trim();
+                    // Parse option lines - look for patterns like "(1) Text" or "(y) Text"
+
+                    if let Some(pos) = line.find('(') {
+                        let re = Regex::new(r#"(?m)^\s*\(([a-zA-Z0-9])\)\s+(.*)"#)?;
+                        
+                        // Use captures_iter to find all matches and their capture groups.
+                        let cap = re.captures(line).unwrap();
+    
+                        let id = &cap[1].trim();
+                        let text = &cap[2].trim(); 
                         
                         if !id.is_empty() && !text.is_empty() {
                             current_options.push(AnswerOption {

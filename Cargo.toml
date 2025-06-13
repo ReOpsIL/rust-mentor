@@ -21,3 +21,4 @@ chrono = "0.4.38"
 toml_edit = { version = "0.22.27", features = ["serde"] }
 directories = "6"
 toml = "0.8.23"
+regex = "1.11.1"
