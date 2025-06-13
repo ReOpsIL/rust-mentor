@@ -145,6 +145,10 @@ pub enum AppState {
     Loading,
     LevelTooLowPopup,
     Settings,
+    QuestionGeneration,
+    QuestionAnswering,
+    ApplicationGeneration,
+    ApplicationDisplay,
 }
 
 pub enum IndexType {
@@ -173,6 +177,12 @@ pub struct App {
     module_receiver: mpsc::Receiver<Result<LearningModule>>,
     module_sender: mpsc::Sender<Result<LearningModule>>,
     config_service: ConfigService,
+    // Question generator fields
+    pub question_set: Option<crate::question_generator::QuestionSet>,
+    pub generated_application: Option<crate::question_generator::GeneratedApplication>,
+    pub question_generator: Option<crate::question_generator::QuestionGenerator>,
+    pub question_generation_rx: Option<mpsc::UnboundedReceiver<Result<crate::question_generator::QuestionSet>>>,
+    pub application_generation_rx: Option<mpsc::UnboundedReceiver<Result<crate::question_generator::GeneratedApplication>>>,
 }
 
 #[derive(PartialEq)]
@@ -180,6 +190,7 @@ pub enum SettingsSection {
     LearningResources,
     ContentCustomization,
     LearningGoals,
+    QuestionGenerator,
 }
 
 impl App {
@@ -189,10 +200,12 @@ impl App {
 
         // Initialize config service
         let config_service = ConfigService::new();
-        
+
+        let llm_client = LlmClient::new(api_key.clone());
+
         Self {
             is_running: true,
-            current_state: AppState::Welcome,
+            current_state:  AppState::Welcome,
             selected_level: 5, // Default level
             selected_index: IndexType::Random, // Default index
             index_selection_cursor: 0, // Default cursor position
@@ -201,7 +214,7 @@ impl App {
             show_help: false,
             show_quit_confirmation: false,
             quit_confirmation_selected: false, // Default to "No"
-            llm_client: LlmClient::new(api_key.clone()),
+            llm_client: llm_client.clone(),
             api_key,
             scroll_offset: 0,
             current_module: None,
@@ -209,6 +222,12 @@ impl App {
             module_receiver,
             module_sender,
             config_service,
+            // Initialize question generator fields
+            question_set: None,
+            generated_application: None,
+            question_generator: Some(crate::question_generator::QuestionGenerator::new(llm_client)),
+            question_generation_rx: None,
+            application_generation_rx: None,
         }
     }
 
@@ -222,6 +241,64 @@ impl App {
                     self.popup_start_time = None;
                     // Return to the welcome screen
                     self.current_state = AppState::Welcome;
+                }
+            }
+        }
+
+        // Check if we're in the QuestionGeneration state and poll for results
+        if let AppState::QuestionGeneration = self.current_state {
+            if let Some(ref mut rx) = self.question_generation_rx {
+                match rx.try_recv() {
+                    Ok(result) => {
+                        match result {
+                            Ok(question_set) => {
+                                self.question_set = Some(question_set);
+                                self.current_state = AppState::QuestionAnswering;
+                            },
+                            Err(err) => {
+                                tracing::error!("Failed to generate questions: {}", err);
+                                self.current_state = AppState::Learning;
+                            }
+                        }
+                        self.question_generation_rx = None;
+                    },
+                    Err(mpsc::error::TryRecvError::Empty) => {
+                        // Still waiting for the result
+                    },
+                    Err(mpsc::error::TryRecvError::Disconnected) => {
+                        tracing::error!("Question generation task disconnected");
+                        self.current_state = AppState::Learning;
+                        self.question_generation_rx = None;
+                    }
+                }
+            }
+        }
+
+        // Check if we're in the ApplicationGeneration state and poll for results
+        if let AppState::ApplicationGeneration = self.current_state {
+            if let Some(ref mut rx) = self.application_generation_rx {
+                match rx.try_recv() {
+                    Ok(result) => {
+                        match result {
+                            Ok(application) => {
+                                self.generated_application = Some(application);
+                                self.current_state = AppState::ApplicationDisplay;
+                            },
+                            Err(err) => {
+                                tracing::error!("Failed to generate application: {}", err);
+                                self.current_state = AppState::QuestionAnswering;
+                            }
+                        }
+                        self.application_generation_rx = None;
+                    },
+                    Err(mpsc::error::TryRecvError::Empty) => {
+                        // Still waiting for the result
+                    },
+                    Err(mpsc::error::TryRecvError::Disconnected) => {
+                        tracing::error!("Application generation task disconnected");
+                        self.current_state = AppState::QuestionAnswering;
+                        self.application_generation_rx = None;
+                    }
                 }
             }
         }
@@ -346,6 +423,16 @@ impl App {
             AppState::IndexSelection => self.handle_index_selection_keys(key_event),
             AppState::Learning => self.handle_learning_keys(key_event),
             AppState::Settings => self.handle_settings_keys(key_event),
+            AppState::QuestionGeneration => {
+                // No key handling in question generation state
+                // This state is transient and will automatically transition to QuestionAnswering
+            },
+            AppState::QuestionAnswering => self.handle_question_answering_keys(key_event),
+            AppState::ApplicationGeneration => {
+                // No key handling in application generation state
+                // This state is transient and will automatically transition to ApplicationDisplay
+            },
+            AppState::ApplicationDisplay => self.handle_application_display_keys(key_event),
             _ => {}
         }
         Ok(())
@@ -374,11 +461,11 @@ impl App {
             KeyCode::Down | KeyCode::Char('j') => {
                 // Move cursor down (0-2)
                 self.index_selection_cursor = (self.index_selection_cursor + 1).min(3);
-            }
+            },
             KeyCode::Up | KeyCode::Char('k') => {
                 // Move cursor up
                 self.index_selection_cursor = self.index_selection_cursor.saturating_sub(1);
-            }
+            },
             KeyCode::Enter => {
                 // Set the selected index based on cursor position
                 self.selected_index = match self.index_selection_cursor {
@@ -402,7 +489,11 @@ impl App {
                     // Generate a learning module based on the selected level and index
                     self.generate_learning_module();
                 }
-            }
+            },
+            KeyCode::Char('w') => {
+                self.current_state = AppState::QuestionGeneration;
+                self.generate_questions();
+            },
             KeyCode::Esc => {
                 // Go back to welcome screen
                 self.current_state = AppState::Welcome;
@@ -469,6 +560,12 @@ impl App {
                 // Generate a new learning module
                 self.generate_learning_module();
             }
+            KeyCode::Char('w') => {
+                // Start the question generator
+                self.current_state = AppState::QuestionGeneration;
+                // Generate questions
+                self.generate_questions();
+            }
             KeyCode::Esc => {
                 self.current_state = AppState::Welcome;
             }
@@ -495,6 +592,10 @@ impl App {
         self.config_service.get_content_customization()
     }
 
+    pub fn get_question_generator_settings(&self) -> &crate::config::QuestionGeneratorSettings {
+        self.config_service.get_question_generator_settings()
+    }
+    
     // Generate additional learning resources based on the topic
     pub fn generate_additional_resources(&self, topic: &str) -> Option<AdditionalResources> {
         // Only generate resources if we have a valid topic (not an error message)
@@ -640,7 +741,8 @@ impl App {
                 self.settings_section = match self.settings_section {
                     SettingsSection::LearningResources => SettingsSection::ContentCustomization,
                     SettingsSection::ContentCustomization => SettingsSection::LearningGoals,
-                    SettingsSection::LearningGoals => SettingsSection::LearningResources,
+                    SettingsSection::LearningGoals => SettingsSection::QuestionGenerator,
+                    SettingsSection::QuestionGenerator => SettingsSection::LearningResources,
                 };
                 self.settings_cursor = 0; // Reset cursor when changing sections
             }
@@ -656,6 +758,7 @@ impl App {
                     SettingsSection::LearningResources => 3, // 4 options (0-3)
                     SettingsSection::ContentCustomization => 2, // 3 options (0-2)
                     SettingsSection::LearningGoals => 3, // 4 options (0-3)
+                    SettingsSection::QuestionGenerator => 1, // Two options (0-1)
                 };
                 if self.settings_cursor < max_cursor {
                     self.settings_cursor += 1;
@@ -680,7 +783,7 @@ impl App {
                             2 => { let _ = self.config_service.cycle_focus_area(); }
                             _ => {}
                         }
-                        
+
                     }
                     SettingsSection::LearningGoals => {
                         match self.settings_cursor {
@@ -688,6 +791,13 @@ impl App {
                             1 => { let _ = self.config_service.cycle_learning_goal(); },
                             2 => { let _ = self.config_service.cycle_learning_goal(); },
                             3 => { let _ = self.config_service.cycle_learning_goal(); },
+                            _ => {}
+                        }
+                    },
+                    SettingsSection::QuestionGenerator => {
+                        match self.settings_cursor {
+                            0 => { let _ = self.config_service.increment_num_questions(); },
+                            1 => { let _ = self.config_service.cycle_question_type(); },
                             _ => {}
                         }
                     }
@@ -722,6 +832,13 @@ impl App {
                             3 => { let _ = self.config_service.cycle_learning_goal_reverse(); },
                             _ => {}
                         }
+                    },
+                    SettingsSection::QuestionGenerator => {
+                        match self.settings_cursor {
+                            0 => { let _ = self.config_service.decrement_num_questions(); },
+                            1 => { let _ = self.config_service.cycle_question_type(); },
+                            _ => {}
+                        }
                     }
                 }
             }
@@ -731,5 +848,143 @@ impl App {
 
     pub fn get_learning_goal(&self) -> LearningGoal {
         self.config_service.get_content_customization().learning_goal
+    }
+    
+
+    // Question generator methods
+    pub fn generate_questions(&mut self) {
+        let topic = match &self.current_module {
+            Some(module) => module.topic.clone(),
+            None => "Rust programming".to_string(),
+        };
+
+        let learning_goal = self.get_learning_goal();
+        let num_questions = self.get_question_generator_settings().num_questions;
+
+        // Generate questions using the question generator asynchronously
+        if let Some(generator) = &self.question_generator {
+            let generator_clone = generator.clone();
+            let topic_clone = topic.clone();
+            let learning_goal_clone = learning_goal.clone();
+            
+            // Spawn async task to generate questions
+            let (tx, rx) = mpsc::unbounded_channel();
+            
+            tokio::spawn(async move {
+                match generator_clone.generate_questions(&topic_clone, &learning_goal_clone, num_questions).await {
+                    Ok(question_set) => {
+                        let _ = tx.send(Ok(question_set));
+                    },
+                    Err(err) => {
+                        let _ = tx.send(Err(err));
+                    }
+                }
+            });
+            
+            // Store the receiver for polling in the update loop
+            self.question_generation_rx = Some(rx);
+        }
+    }
+
+    pub fn generate_application(&mut self) {
+        if let (Some(generator), Some(question_set)) = (&self.question_generator, &self.question_set) {
+            // Only generate an application if all questions have been answered
+            if question_set.is_complete() {
+                self.current_state = AppState::ApplicationGeneration;
+
+                let generator_clone = generator.clone();
+                let question_set_clone = question_set.clone();
+                
+                // Spawn async task to generate application
+                let (tx, rx) = mpsc::unbounded_channel();
+                
+                tokio::spawn(async move {
+                    match generator_clone.generate_application(&question_set_clone).await {
+                        Ok(application) => {
+                            let _ = tx.send(Ok(application));
+                        },
+                        Err(err) => {
+                            let _ = tx.send(Err(err));
+                        }
+                    }
+                });
+                
+                // Store the receiver for polling in the update loop
+                self.application_generation_rx = Some(rx);
+            }
+        }
+    }
+
+    pub fn handle_question_answering_keys(&mut self, key_event: KeyEvent) {
+        if let Some(question_set) = &mut self.question_set {
+            match key_event.code {
+                KeyCode::Esc => {
+                    // Go back to the learning state
+                    self.current_state = AppState::Learning;
+                },
+                KeyCode::Left | KeyCode::Char('h') => {
+                    // Go to the previous question
+                    question_set.previous_question();
+                },
+                KeyCode::Right | KeyCode::Char('l') => {
+                    // Go to the next question
+                    question_set.next_question();
+                },
+                KeyCode::Enter => {
+                    // If all questions are answered, generate the application
+                    if question_set.is_complete() {
+                        self.generate_application();
+                    }
+                },
+                KeyCode::Char(c) => {
+                    // Handle answer selection
+                    if let Some(current_question) = question_set.current_question_mut() {
+                        match current_question.question_type {
+                            crate::question_generator::QuestionType::Binary => {
+                                // For binary questions, 'y' is Yes and 'n' is No
+                                if c == 'y' || c == 'Y' {
+                                    current_question.selected_answer = Some("Yes".to_string());
+                                } else if c == 'n' || c == 'N' {
+                                    current_question.selected_answer = Some("No".to_string());
+                                }
+                            },
+                            crate::question_generator::QuestionType::Multiple => {
+                                // For multiple choice, 1-4 or a-d are valid answers
+                                if ('1'..='4').contains(&c) || ('a'..='d').contains(&c) {
+                                    current_question.selected_answer = Some(c.to_string());
+                                }
+                            }
+                        }
+                    }
+                },
+                _ => {}
+            }
+        }
+    }
+
+    pub fn handle_application_display_keys(&mut self, key_event: KeyEvent) {
+        match key_event.code {
+            KeyCode::Esc => {
+                // Go back to the learning state
+                self.current_state = AppState::Learning;
+            },
+            KeyCode::Enter => {
+                // Create a Cargo project from the generated application
+                if let Some(application) = &self.generated_application {
+                    match crate::cargo_project::create_application_project(application) {
+                        Ok(project_dir) => {
+                            tracing::info!("Created application project at: {:?}", project_dir);
+                            // Go back to the learning state
+                            self.current_state = AppState::Learning;
+                        },
+                        Err(err) => {
+                            tracing::error!("Failed to create application project: {}", err);
+                            // Stay in the current state
+                        }
+                    }
+                }
+            },
+            _ => {}
+        }
     }
 }

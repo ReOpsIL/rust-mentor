@@ -206,7 +206,7 @@ Source of this topic: {source}
     }
 
     // Call the OpenRouter API with the prompt
-    async fn call_openrouter_api(&self, prompt: String) -> Result<String> {
+    pub async fn call_openrouter_api(&self, prompt: String) -> Result<String> {
         // Create the request body
         let model_id = Config::load().unwrap().model;
         let request = OpenRouterRequest {

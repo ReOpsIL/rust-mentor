@@ -35,6 +35,10 @@ pub fn render(frame: &mut Frame, app: &App) {
         AppState::Loading => render_loading_view(frame, app, &main_layout),
         AppState::Settings => render_settings_view(frame, app, &main_layout),
         AppState::LevelTooLowPopup => render_welcome_view(frame, app, &main_layout), // Render welcome view in background
+        AppState::QuestionGeneration => render_question_generation_view(frame, app, &main_layout), // Reuse loading view for question generation
+        AppState::QuestionAnswering => render_question_answering_view(frame, app, &main_layout),
+        AppState::ApplicationGeneration => render_loading_view(frame, app, &main_layout), // Reuse loading view for application generation
+        AppState::ApplicationDisplay => render_application_display_view(frame, app, &main_layout),
     }
 
     // Render modals over everything else
@@ -49,6 +53,38 @@ pub fn render(frame: &mut Frame, app: &App) {
     }
 }
 
+pub fn render_question_generation_view(frame: &mut Frame, app: &App, layout: &[Rect]) {
+
+    // Create a centered layout for the loading message
+    let loading_layout = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Percentage(40),
+            Constraint::Length(4),
+            Constraint::Percentage(40),
+        ])
+        .split(layout[1]);
+
+    // Render loading message with animation
+    let loading_text = vec![
+        Line::from(""),
+        Line::from(vec![Span::styled(
+            "<  Generating your learning module questions...  >",
+            Style::default().add_modifier(Modifier::BOLD),
+        )]),
+        Line::from(""),
+    ];
+
+    let loading = Paragraph::new(loading_text).alignment(Alignment::Center);
+
+    frame.render_widget(loading, loading_layout[1]);
+
+    // Render footer
+    let status = Paragraph::new("Please wait...")
+        .alignment(Alignment::Center)
+        .block(Block::default().borders(Borders::TOP));
+    frame.render_widget(status, layout[2]);
+}
 // Functions for rendering different views
 pub fn render_welcome_view(frame: &mut Frame, app: &App, layout: &[Rect]) {
     // Render title bar
@@ -518,6 +554,7 @@ pub fn render_settings_view(frame: &mut Frame, app: &App, layout: &[Rect]) {
         "Learning Resources",
         "Content Customization",
         "Learning Goals",
+        "Question Generator",
     ];
 
     let mut section_lines = Vec::new();
@@ -526,6 +563,7 @@ pub fn render_settings_view(frame: &mut Frame, app: &App, layout: &[Rect]) {
             (0, SettingsSection::LearningResources) => true,
             (1, SettingsSection::ContentCustomization) => true,
             (2, SettingsSection::LearningGoals) => true,
+            (3, SettingsSection::QuestionGenerator) => true,
             _ => false,
         };
 
@@ -554,6 +592,9 @@ pub fn render_settings_view(frame: &mut Frame, app: &App, layout: &[Rect]) {
         }
         SettingsSection::LearningGoals => {
             render_learning_goals_settings(frame, app, settings_layout[1]);
+        }
+        SettingsSection::QuestionGenerator => {
+            render_question_generator_settings(frame, app, settings_layout[1]);
         }
     }
 
@@ -709,6 +750,50 @@ fn render_content_customization_settings(frame: &mut Frame, app: &App, area: Rec
         .block(Block::default().borders(Borders::NONE).title("Options"));
     frame.render_widget(options_widget, area);
 }
+fn render_question_generator_settings(frame: &mut Frame, app: &App, area: Rect) {
+    let customization = app.get_question_generator_settings();
+
+    let mut option_lines = Vec::new();
+    option_lines.push(Line::from(vec![Span::styled(
+        "Question Generator Settings",
+        Style::default().add_modifier(Modifier::BOLD),
+    )]));
+    option_lines.push(Line::from(""));
+
+    // Number of Questions
+    let num_questions_line = if app.settings_cursor == 0 {
+        Line::from(vec![Span::styled(
+            format!("> Number of Questions: [{}]", customization.num_questions),
+            Style::default().fg(Color::Black).bg(Color::LightYellow),
+        )])
+    } else {
+        Line::from(vec![Span::raw(
+            format!("  Number of Questions: [{}]", customization.num_questions),
+        )])
+    };
+
+    option_lines.push(num_questions_line);
+
+    // Question Type
+    let question_type_line = if app.settings_cursor == 1 {
+        Line::from(vec![Span::styled(
+            format!("> Question Type: [{}]", customization.default_question_type),
+            Style::default().fg(Color::Black).bg(Color::LightYellow),
+        )])
+    } else {
+        Line::from(vec![Span::raw(
+            format!("  Question Type: [{}]", customization.default_question_type),
+        )])
+    };
+    option_lines.push(question_type_line);
+
+    option_lines.push(Line::from(""));
+    option_lines.push(Line::from("These settings control how questions are generated for testing your understanding."));
+
+    let options_widget = Paragraph::new(option_lines)
+        .block(Block::default().borders(Borders::NONE).title("Options"));
+    frame.render_widget(options_widget, area);
+}
 fn render_learning_goals_settings(frame: &mut Frame, app: &App, area: Rect) {
         let learning_goal = app.get_learning_goal();
         let goal_text = learning_goal.to_string();
@@ -732,7 +817,7 @@ fn render_learning_goals_settings(frame: &mut Frame, app: &App, area: Rect) {
             )])
         };
         option_lines.push(goal_line);
-    
+
         option_lines.push(Line::from(""));
         option_lines.push(Line::from("These settings control the focus of your learning path in Rust."));
 
@@ -867,3 +952,231 @@ fn render_learning_goals_settings(frame: &mut Frame, app: &App, area: Rect) {
             .split(popup_layout[1])[1]
     }
 
+// Render the question answering view
+pub fn render_question_answering_view(frame: &mut Frame, app: &App, layout: &[Rect]) {
+    // Render title bar
+    let title = Paragraph::new("Rust AI Mentor - Question Answering")
+        .style(
+            Style::default()
+                .fg(Color::LightYellow)
+                .add_modifier(Modifier::BOLD),
+        )
+        .block(Block::default().borders(Borders::BOTTOM));
+    frame.render_widget(title, layout[0]);
+
+    // Check if we have a question set
+    if let Some(question_set) = &app.question_set {
+        // Create a layout for the main content
+        let main_content_layout = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([
+                Constraint::Length(2),  // Topic
+                Constraint::Length(1),  // Empty line
+                Constraint::Length(2),  // Progress
+                Constraint::Length(1),  // Empty line
+                Constraint::Min(5),     // Question
+                Constraint::Length(1),  // Empty line
+                Constraint::Length(6),  // Answer options
+                Constraint::Min(0),     // Empty space
+            ])
+            .split(layout[1]);
+
+        // Render topic
+        let topic_text = format!("Topic: {}", question_set.topic);
+        let topic = Paragraph::new(topic_text)
+            .style(Style::default().add_modifier(Modifier::BOLD))
+            .alignment(Alignment::Center);
+        frame.render_widget(topic, main_content_layout[0]);
+
+        // Render progress
+        let (answered, total) = question_set.progress();
+        let progress_text = format!("Question {}/{}", question_set.current_question_index + 1, total);
+        let progress_bar_width = main_content_layout[2].width as usize - 4;
+        let filled_width = if total > 0 {
+            (progress_bar_width * answered) / total
+        } else {
+            0
+        };
+
+        let progress_bar = format!(
+            "[{}{}] {}/{} answered",
+            "=".repeat(filled_width),
+            " ".repeat(progress_bar_width - filled_width),
+            answered,
+            total
+        );
+
+        let progress = Paragraph::new(progress_bar)
+            .alignment(Alignment::Center);
+        frame.render_widget(progress, main_content_layout[2]);
+
+        // Render current question
+        if let Some(current_question) = question_set.current_question() {
+            let question_text = format!("Q: {}", current_question.text);
+            let wrapped_text = textwrap::wrap(&question_text, main_content_layout[4].width as usize - 4)
+                .iter()
+                .map(|line| Line::from(line.to_string()))
+                .collect::<Vec<_>>();
+
+            let question = Paragraph::new(wrapped_text)
+                .block(Block::default().borders(Borders::ALL).title("Question"));
+            frame.render_widget(question, main_content_layout[4]);
+
+            // Render answer options
+            let mut option_lines = Vec::new();
+
+            match current_question.question_type {
+                crate::question_generator::QuestionType::Binary => {
+                    let yes_style = if current_question.selected_answer.as_deref() == Some("Yes") {
+                        Style::default().fg(Color::Black).bg(Color::LightYellow)
+                    } else {
+                        Style::default()
+                    };
+
+                    let no_style = if current_question.selected_answer.as_deref() == Some("No") {
+                        Style::default().fg(Color::Black).bg(Color::LightYellow)
+                    } else {
+                        Style::default()
+                    };
+
+                    option_lines.push(Line::from(vec![
+                        Span::styled("(Y) Yes", yes_style),
+                        Span::raw("   "),
+                        Span::styled("(N) No", no_style),
+                    ]));
+                },
+                crate::question_generator::QuestionType::Multiple => {
+                    for option in &current_question.options {
+                        let style = if current_question.selected_answer.as_deref() == Some(&option.id) {
+                            Style::default().fg(Color::Black).bg(Color::LightYellow)
+                        } else {
+                            Style::default()
+                        };
+
+                        option_lines.push(Line::from(vec![
+                            Span::styled(format!("({}) {}", option.id, option.text), style),
+                        ]));
+                    }
+                }
+            }
+
+            let options = Paragraph::new(option_lines)
+                .block(Block::default().borders(Borders::ALL).title("Answer Options"));
+            frame.render_widget(options, main_content_layout[6]);
+        }
+    } else {
+        // No question set available
+        let message = Paragraph::new("No questions available. Press 'q' in Learning mode to generate questions.")
+            .alignment(Alignment::Center)
+            .style(Style::default().add_modifier(Modifier::BOLD));
+        frame.render_widget(message, layout[1]);
+    }
+
+    // Render footer
+    let footer_spans = vec![
+        Span::raw("(←/→) Navigate Questions | (Enter) Submit Answers "),
+        Span::raw("| (Esc) Back to Learning"),
+    ];
+
+    let footer_line = Line::from(footer_spans);
+    let status = Paragraph::new(footer_line)
+        .alignment(Alignment::Center)
+        .style(
+            Style::default()
+                .fg(Color::LightYellow)
+                .add_modifier(Modifier::BOLD),
+        )
+        .block(Block::default().borders(Borders::TOP));
+    frame.render_widget(status, layout[2]);
+}
+
+// Render the application display view
+pub fn render_application_display_view(frame: &mut Frame, app: &App, layout: &[Rect]) {
+    // Render title bar
+    let title = Paragraph::new("Rust AI Mentor - Generated Application")
+        .style(
+            Style::default()
+                .fg(Color::LightYellow)
+                .add_modifier(Modifier::BOLD),
+        )
+        .block(Block::default().borders(Borders::BOTTOM));
+    frame.render_widget(title, layout[0]);
+
+    // Check if we have a generated application
+    if let Some(application) = &app.generated_application {
+        // Create a layout for the main content
+        let main_content_layout = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([
+                Constraint::Length(2),  // Application name
+                Constraint::Length(1),  // Empty line
+                Constraint::Length(4),  // Description
+                Constraint::Length(1),  // Empty line
+                Constraint::Length(6),  // Features
+                Constraint::Length(1),  // Empty line
+                Constraint::Min(10),    // Code snippets
+            ])
+            .split(layout[1]);
+
+        // Render application name
+        let name_text = format!("Application: {}", application.name);
+        let name = Paragraph::new(name_text)
+            .style(Style::default().add_modifier(Modifier::BOLD))
+            .alignment(Alignment::Center);
+        frame.render_widget(name, main_content_layout[0]);
+
+        // Render description
+        let wrapped_description = textwrap::wrap(&application.description, main_content_layout[2].width as usize - 4)
+            .iter()
+            .map(|line| Line::from(line.to_string()))
+            .collect::<Vec<_>>();
+
+        let description = Paragraph::new(wrapped_description)
+            .block(Block::default().borders(Borders::ALL).title("Description"));
+        frame.render_widget(description, main_content_layout[2]);
+
+        // Render features
+        let feature_lines: Vec<Line> = application.features
+            .iter()
+            .map(|feature| Line::from(format!("• {}", feature)))
+            .collect();
+
+        let features = Paragraph::new(feature_lines)
+            .block(Block::default().borders(Borders::ALL).title("Features"));
+        frame.render_widget(features, main_content_layout[4]);
+
+        // Render code snippets (just the first one for now)
+        if let Some(first_snippet) = application.code_snippets.first() {
+            let syntax = SYNTAX_SET.find_syntax_by_extension("rs").unwrap_or_else(|| SYNTAX_SET.find_syntax_plain_text());
+            let mut highlighter = HighlightLines::new(syntax, &THEME_SET.themes["base16-ocean.dark"]);
+
+            let highlighted_code = add_colors(&mut highlighter, &first_snippet.code);
+
+            let code = Paragraph::new(highlighted_code)
+                .block(Block::default().borders(Borders::ALL).title(format!("Code: {}", first_snippet.title)));
+            frame.render_widget(code, main_content_layout[6]);
+        }
+    } else {
+        // No application available
+        let message = Paragraph::new("No application generated yet. Answer all questions to generate an application.")
+            .alignment(Alignment::Center)
+            .style(Style::default().add_modifier(Modifier::BOLD));
+        frame.render_widget(message, layout[1]);
+    }
+
+    // Render footer
+    let footer_spans = vec![
+        Span::raw("(Enter) Create Project | (Esc) Back to Learning"),
+    ];
+
+    let footer_line = Line::from(footer_spans);
+    let status = Paragraph::new(footer_line)
+        .alignment(Alignment::Center)
+        .style(
+            Style::default()
+                .fg(Color::LightYellow)
+                .add_modifier(Modifier::BOLD),
+        )
+        .block(Block::default().borders(Borders::TOP));
+    frame.render_widget(status, layout[2]);
+}

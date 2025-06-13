@@ -9,6 +9,7 @@ mod ui;
 mod prompt_response;
 mod config;
 mod cargo_project;
+mod question_generator;
 
 use anyhow::Result;
 use app::App;

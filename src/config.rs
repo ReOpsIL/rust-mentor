@@ -4,12 +4,14 @@ use std::fs;
 use std::io::Read;
 use toml_edit;
 use crate::app::LearningGoal;
+use crate::question_generator::QuestionType;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Config {
     pub model: String,
     pub learning_resources: LearningResources,
     pub content_customization: ContentCustomization,
+    pub question_generator_settings: QuestionGeneratorSettings,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -50,6 +52,15 @@ pub enum FocusArea {
     Balanced,
 }
 
+const MIN_QUESTIONS: usize = 3;
+const MAX_QUESTIONS: usize =  10;
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct QuestionGeneratorSettings {
+    pub num_questions: usize,
+    pub default_question_type: QuestionType,
+    pub enable_application_generation: bool,
+}
+
 impl Config {
     pub fn load() -> Result<Config, Box<dyn std::error::Error>> {
         let user_dirs = UserDirs::new().expect("Could not find user directories");
@@ -75,6 +86,11 @@ impl Config {
                     focus_area: FocusArea::Balanced,
                     learning_goal: LearningGoal::General,
                 },
+                question_generator_settings: QuestionGeneratorSettings {
+                    num_questions: 5,
+                    default_question_type: QuestionType::Multiple,
+                    enable_application_generation: true,
+                },
             };
             let toml = toml::to_string(&default_config)?;
             fs::write(&config_path, toml)?;
@@ -96,6 +112,7 @@ impl Config {
 pub struct ConfigService {
     config: Config,
 }
+
 
 impl ConfigService {
     pub fn new() -> Self {
@@ -176,6 +193,17 @@ impl ConfigService {
         self.config.save()
     }
 
+    pub fn increment_num_questions(&mut self) {
+        if self.config.question_generator_settings.num_questions < MAX_QUESTIONS {
+            self.config.question_generator_settings.num_questions += 1;
+        }
+    }
+    pub fn decrement_num_questions(&mut self) {
+        if self.config.question_generator_settings.num_questions > MIN_QUESTIONS {
+            self.config.question_generator_settings.num_questions -= 1;
+        }
+    }
+
     pub fn cycle_code_complexity(&mut self) -> Result<(), Box<dyn std::error::Error>> {
         self.config.content_customization.code_complexity = match self.config.content_customization.code_complexity {
             CodeComplexity::Simple => CodeComplexity::Moderate,
@@ -211,7 +239,7 @@ impl ConfigService {
         };
         self.config.save()
     }
-    
+
     pub fn cycle_focus_area(&mut self) -> Result<(), Box<dyn std::error::Error>> {
         self.config.content_customization.focus_area = match self.config.content_customization.focus_area {
             FocusArea::Concepts => FocusArea::CodeExamples,
@@ -328,6 +356,39 @@ impl ConfigService {
             LearningGoal::Transformers => LearningGoal::TUI,
             LearningGoal::UserInterface => LearningGoal::Transformers,
             LearningGoal::WebDevelopment => LearningGoal::UserInterface,
+        };
+        self.config.save()
+    }
+
+    // Question generator settings methods
+    pub fn get_question_generator_settings(&self) -> &QuestionGeneratorSettings {
+        &self.config.question_generator_settings
+    }
+
+    pub fn update_question_generator_settings(&mut self, settings: QuestionGeneratorSettings) -> Result<(), Box<dyn std::error::Error>> {
+        self.config.question_generator_settings = settings;
+        self.config.save()
+    }
+
+    pub fn update_num_questions(&mut self, num_questions: usize) -> Result<(), Box<dyn std::error::Error>> {
+        self.config.question_generator_settings.num_questions = num_questions;
+        self.config.save()
+    }
+
+    pub fn update_default_question_type(&mut self, question_type: QuestionType) -> Result<(), Box<dyn std::error::Error>> {
+        self.config.question_generator_settings.default_question_type = question_type;
+        self.config.save()
+    }
+
+    pub fn toggle_application_generation(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        self.config.question_generator_settings.enable_application_generation = !self.config.question_generator_settings.enable_application_generation;
+        self.config.save()
+    }
+
+    pub fn cycle_question_type(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        self.config.question_generator_settings.default_question_type = match self.config.question_generator_settings.default_question_type {
+            QuestionType::Binary => QuestionType::Multiple,
+            QuestionType::Multiple => QuestionType::Binary,
         };
         self.config.save()
     }
