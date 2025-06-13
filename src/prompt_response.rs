@@ -1,3 +1,5 @@
+use serde::{Deserialize, Serialize};
+
 // Define the structs to hold the parsed data
 #[derive(Debug, Clone)]
 pub struct PromptResponse {
@@ -6,14 +8,14 @@ pub struct PromptResponse {
     pub exercises: Vec<Exercise>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CodeSnippet {
     pub title: String,
     pub description: String,
     pub code: String,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Exercise {
     pub name: String,
     pub description: String,
