@@ -1053,9 +1053,17 @@ pub fn render_question_answering_view(frame: &mut Frame, app: &App, layout: &[Re
                             Style::default()
                         };
 
+                        let wrapped_option_text = textwrap::wrap(&option.text, main_content_layout[6].width as usize - 4);
+                        
                         option_lines.push(Line::from(vec![
-                            Span::styled(format!("({}) {}", option.id, option.text), style),
+                            Span::styled(format!("({}) {}", option.id, wrapped_option_text[0]), style),
                         ]));
+                        for i in wrapped_option_text.iter().skip(1) {
+                            option_lines.push(Line::from(vec![
+                                Span::raw("   "),
+                                Span::styled(format!("{}", i), style),
+                            ]));
+                        }
                     }
                 }
             }

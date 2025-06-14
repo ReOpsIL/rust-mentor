@@ -283,6 +283,13 @@ impl App {
                             Ok(application) => {
                                 self.generated_application = Some(application);
                                 self.current_state = AppState::ApplicationDisplay;
+
+                                // Transition to loading state
+                                //self.current_state = AppState::Loading;
+
+                                // Generate a learning module based on the selected level and index
+                                self.generate_learning_module();
+
                             },
                             Err(err) => {
                                 tracing::error!("Failed to generate application: {}", err);
@@ -483,17 +490,15 @@ impl App {
                     // Start the timer
                     self.popup_start_time = Some(std::time::Instant::now());
                 } else {
-                    // Transition to loading state
-                    self.current_state = AppState::Loading;
+                    self.current_state = AppState::QuestionGeneration;
+                    self.generate_questions();
 
-                    // Generate a learning module based on the selected level and index
-                    self.generate_learning_module();
                 }
             },
-            KeyCode::Char('w') => {
-                self.current_state = AppState::QuestionGeneration;
-                self.generate_questions();
-            },
+            // KeyCode::Char('w') => {
+            //     self.current_state = AppState::QuestionGeneration;
+            //     self.generate_questions();
+            // },
             KeyCode::Esc => {
                 // Go back to welcome screen
                 self.current_state = AppState::Welcome;
@@ -858,9 +863,11 @@ impl App {
             None => "Rust programming".to_string(),
         };
 
-        let learning_goal = self.get_learning_goal();
-        let num_questions = self.get_question_generator_settings().num_questions;
+        let question_settings = self.get_question_generator_settings().clone();
 
+        let learning_goal = self.get_learning_goal();
+        let num_questions = question_settings.num_questions;
+        let question_type= question_settings.default_question_type;
         // Generate questions using the question generator asynchronously
         if let Some(generator) = &self.question_generator {
             let generator_clone = generator.clone();
@@ -871,7 +878,7 @@ impl App {
             let (tx, rx) = mpsc::unbounded_channel();
             
             tokio::spawn(async move {
-                match generator_clone.generate_questions(&topic_clone, &learning_goal_clone, num_questions).await {
+                match generator_clone.generate_questions(&topic_clone, &learning_goal_clone, question_type, num_questions).await {
                     Ok(question_set) => {
                         let _ = tx.send(Ok(question_set));
                     },

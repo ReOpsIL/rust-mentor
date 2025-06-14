@@ -113,9 +113,9 @@ impl QuestionGenerator {
     }
 
     /// Generate a set of questions for a specific topic
-    pub async fn generate_questions(&self, topic: &str, learning_goal: &LearningGoal, num_questions: usize) -> Result<QuestionSet> {
+    pub async fn generate_questions(&self, topic: &str, learning_goal: &LearningGoal, question_type: QuestionType, num_questions: usize) -> Result<QuestionSet> {
         // Create a prompt for the LLM to generate questions
-        let prompt = self.create_questions_prompt(topic, learning_goal, num_questions);
+        let prompt = self.create_questions_prompt(topic, learning_goal, question_type, num_questions);
         
         // Call the LLM API
         let response = self.llm_client.call_openrouter_api(prompt).await?;
@@ -127,12 +127,12 @@ impl QuestionGenerator {
     }
 
     /// Create a prompt for generating questions
-    fn create_questions_prompt(&self, topic: &str, learning_goal: &LearningGoal, num_questions: usize) -> String {
+    fn create_questions_prompt(&self, topic: &str, learning_goal: &LearningGoal, question_type: QuestionType, num_questions: usize) -> String {
         format!(
             r#"
 You are **RustMentor**, an AI assistant specialized in teaching Rust programming through hands-on application development.
 
-Your task is to generate `{num_questions}` creative and engaging questions about `{topic}` in the context of `{learning_goal}`. These questions are not meant to assess knowledge directly, but to **explore user preferences, goals, and inspirations** — ultimately guiding an LLM to generate a **unique Rust application** tailored to the user’s responses.
+Your task is to generate `{num_questions}` with `{question_type}` questions about creative and engaging questions about `{topic}` in the context of `{learning_goal}`. These questions are not meant to assess knowledge directly, but to **explore user preferences, goals, and inspirations** — ultimately guiding an LLM to generate a **unique Rust application** tailored to the user’s responses.
 
 The questions should cover:
 
@@ -143,10 +143,10 @@ The questions should cover:
 * Any innovative or unexpected directions the app could take
 * If the question contains multiple options (See examples)  then the answer section should include multiple options and not an answer with only Yes No options.
 
-Example 1 ( multiple answers ):
+Example 1 ( `Multiple` question type multiple choice answers ):
 ----------------
 Question:
-Imagine you could build a Rust application that helps people explore their creativity. 
+Imagine you could build a Rust application that helps people explore their creativity.
 Would you be more interested in an application that:
 
 Answer Options:
@@ -156,7 +156,7 @@ Answer Options:
 (4) Constructs a procedurally generated world for a text-based adventure game where the world's geography and lore are dynamically created?
 ----------------
 
-Example 2  ( yes no answers ):
+Example 2  ( `Binary` question type yes no answers ):
 ----------------
 Question: Would you prefer your Rust application to be more sutable for addults in terms of font size ?
 (Y) Yes   (N) No
@@ -164,7 +164,7 @@ Question: Would you prefer your Rust application to be more sutable for addults 
 
 
 * You should mix **binary (yes/no)** and **multiple choice** (with 4 imaginative options) question types.
-* Multiple choice questions should include varied and creative options that spark curiosity and decision-making. 
+* Multiple choice questions should include varied and creative options that spark curiosity and decision-making.
 * Fill in blanks with **inventive**, **fun**, or **technically intriguing** ideas, always within the boundaries of `{topic}` and `{learning_goal}`.
 
 For each question, include:
@@ -268,15 +268,15 @@ Make sure all questions help steer the LLM toward designing a complete, compelli
                 } else if in_options && current_type == QuestionType::Multiple {
                     // Parse option lines - look for patterns like "(1) Text" or "(y) Text"
 
-                    if let Some(pos) = line.find('(') {
+                    if  line.starts_with('(') {
                         let re = Regex::new(r#"(?m)^\s*\(([a-zA-Z0-9])\)\s+(.*)"#)?;
-                        
+
                         // Use captures_iter to find all matches and their capture groups.
                         let cap = re.captures(line).unwrap();
-    
+
                         let id = &cap[1].trim();
-                        let text = &cap[2].trim(); 
-                        
+                        let text = &cap[2].trim();
+
                         if !id.is_empty() && !text.is_empty() {
                             current_options.push(AnswerOption {
                                 id: id.to_string(),
@@ -405,6 +405,10 @@ You can include more code snippets as needed.
         let mut current_title = String::new();
         
         for line in response.lines() {
+            let line = line
+                .replace("```rust","")
+                .replace("```","");
+
             let line = line.trim();
             
             if line.starts_with("<<<application_name>>>") {

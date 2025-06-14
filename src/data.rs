@@ -112,7 +112,7 @@ pub fn load_rust_programming_language() -> Result<RustProgrammingLanguage> {
 pub fn get_random_topic_for_level(level: u8, index_type: &crate::app::IndexType) -> Result<Topic> {
     use crate::app::IndexType;
 
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
 
     match index_type {
         IndexType::RustLibrary => {
@@ -130,7 +130,7 @@ pub fn get_random_topic_for_level(level: u8, index_type: &crate::app::IndexType)
             }
 
             // Select a random topic
-            let random_index = rng.gen_range(0..suitable_topics.len());
+            let random_index = rng.random_range(0..suitable_topics.len());
             let selected_topic = suitable_topics[random_index];
 
             Ok(Topic {
@@ -163,7 +163,7 @@ pub fn get_random_topic_for_level(level: u8, index_type: &crate::app::IndexType)
             }
 
             // Select a random topic
-            let random_index = rng.gen_range(0..suitable_topics.len());
+            let random_index = rng.random_range(0..suitable_topics.len());
             Ok(suitable_topics[random_index].clone())
         },
         IndexType::RustProgrammingLanguage => {
@@ -190,15 +190,17 @@ pub fn get_random_topic_for_level(level: u8, index_type: &crate::app::IndexType)
             }
 
             // Select a random topic
-            let random_index = rng.gen_range(0..suitable_topics.len());
+            let random_index = rng.random_range(0..suitable_topics.len());
             Ok(suitable_topics[random_index].clone())
         },
         IndexType::Random => {
             // Randomly select one of the three index types
-            let random_index_type = match rng.gen_range(0..3) {
+            let random_index_type = match rng.random_range(0..4) {
                 0 => IndexType::RustLibrary,
                 1 => IndexType::RustByExample,
-                _ => IndexType::RustProgrammingLanguage,
+                2 => IndexType::RustProgrammingLanguage,
+                3 => IndexType::Random,
+                _ => IndexType::Random,
             };
 
             // Recursively call this function with the randomly selected index type

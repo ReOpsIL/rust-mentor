@@ -122,7 +122,7 @@ impl ConfigService {
                 tracing::info!("Loaded config: {:?}", config);
                 ConfigService { config }
             },
-            Err(err) => {
+            Err(_) => {
                 tracing::error!("Failed to load config (~/rust-mentor.conf) - delete config file and rerun.");
                 std::process::exit(-1);
             }
