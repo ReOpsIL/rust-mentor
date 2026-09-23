@@ -1,6 +1,5 @@
 # Rust
 /target
-Cargo.lock
 
 # Environment
 .env
@@ -10,4 +9,9 @@ Cargo.lock
 # IDEs
 .vscode/
 .idea/
-docs/.DS_Store
+
+# OS files
+.DS_Store
+
+# Local drafts (not part of the project)
+/ignore/

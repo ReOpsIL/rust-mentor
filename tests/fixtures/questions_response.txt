@@ -1,0 +1,35 @@
+Here are your questions:
+
+```
+<<<question:1>>>
+Question: Imagine an app that helps people learn.
+Which would you rather build?
+[TYPE: multiple]
+[OPTIONS (only for multiple choice):
+(1) A quiz game with timed rounds
+(2) A flashcard app with spaced repetition
+(3) A collaborative whiteboard
+(4) A text adventure with a procedurally generated world]
+<<<end>>>
+
+<<<question:2>>>
+Should the app save progress between sessions?
+[TYPE: binary]
+[YESNO (only for yes no choice):
+(Y) Yes
+(N) No]
+<<<end>>>
+
+<<<question:3>>>
+Which interface do you prefer?
+[TYPE: multiple]
+(1)Terminal UI
+(2) Web page
+(3) Desktop window
+<<<end>>>
+
+<<<question:4>>>
+Do you want multiplayer support?
+[TYPE: multiple]
+<<<end>>>
+```

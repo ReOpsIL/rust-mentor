@@ -1,39 +1,89 @@
 // src/llm.rs
-use crate::app::LearningModule;
-use crate::data::Topic;
-use anyhow::Result;
-use reqwest::Client;
-use serde::{Deserialize, Serialize};
+// OpenRouter client: streaming chat completions with retries, and the model list.
 use crate::config::Config;
-use crate::prompt_response::{CodeSnippet, Exercise, PromptResponse};
+use crate::data::Topic;
+use crate::model::LearningModule;
+use crate::{parsing, prompts};
+use anyhow::{Context, Result, anyhow, bail};
+use futures_util::StreamExt;
+use reqwest::{Client, StatusCode};
+use serde::{Deserialize, Serialize};
+use std::time::Duration;
 
-// OpenRouter API request structure
+const CHAT_URL: &str = "https://openrouter.ai/api/v1/chat/completions";
+const MODELS_URL: &str = "https://openrouter.ai/api/v1/models";
+const MAX_ATTEMPTS: u32 = 3;
+const MAX_RETRY_DELAY: Duration = Duration::from_secs(10);
+
 #[derive(Debug, Serialize)]
-struct OpenRouterRequest {
-    model: String,
+struct ChatRequest<'a> {
+    model: &'a str,
     messages: Vec<Message>,
+    stream: bool,
 }
 
 #[derive(Debug, Serialize)]
 struct Message {
-    role: String,
+    role: &'static str,
     content: String,
 }
 
-// OpenRouter API response structure
-#[derive(Debug, Deserialize)]
-struct OpenRouterResponse {
-    choices: Vec<Choice>,
+/// An OpenRouter model
+#[derive(Debug, Clone, PartialEq)]
+pub struct Model {
+    pub id: String,
+    pub name: String,
+    pub is_free: bool,
 }
 
-#[derive(Debug, Deserialize)]
-struct Choice {
-    message: ResponseMessage,
+/// A parsed server-sent event line of a streaming completion
+#[derive(Debug, PartialEq)]
+enum StreamEvent {
+    /// Generated text
+    Delta(String),
+    /// The stream is complete
+    Done,
+    /// An error reported inside the stream
+    Error(String),
+    /// Comments, keep-alives and events without content
+    Ignore,
 }
 
-#[derive(Debug, Deserialize)]
-struct ResponseMessage {
-    content: String,
+fn error_message(value: &serde_json::Value) -> Option<String> {
+    let error = value.get("error")?;
+    Some(error.get("message").and_then(|m| m.as_str()).map(str::to_string).unwrap_or_else(|| error.to_string()))
+}
+
+fn parse_stream_line(line: &str) -> StreamEvent {
+    let Some(data) = line.trim().strip_prefix("data:") else {
+        return StreamEvent::Ignore;
+    };
+    let data = data.trim();
+    if data == "[DONE]" {
+        return StreamEvent::Done;
+    }
+    let Ok(value) = serde_json::from_str::<serde_json::Value>(data) else {
+        return StreamEvent::Ignore;
+    };
+    if let Some(message) = error_message(&value) {
+        return StreamEvent::Error(message);
+    }
+    match value.pointer("/choices/0/delta/content").and_then(|c| c.as_str()) {
+        Some(text) if !text.is_empty() => StreamEvent::Delta(text.to_string()),
+        _ => StreamEvent::Ignore,
+    }
+}
+
+fn is_retryable(status: StatusCode) -> bool {
+    status == StatusCode::TOO_MANY_REQUESTS || status.is_server_error()
+}
+
+fn retry_delay(attempt: u32, retry_after: Option<&str>) -> Duration {
+    retry_after
+        .and_then(|value| value.trim().parse::<u64>().ok())
+        .map(Duration::from_secs)
+        .unwrap_or(Duration::from_secs(1 << attempt))
+        .min(MAX_RETRY_DELAY)
 }
 
 // LLM client for generating learning content
@@ -43,268 +93,225 @@ pub struct LlmClient {
     api_key: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct Model {
-    pub id: String,
-    pub name: String,
-}
-
-
 impl LlmClient {
     pub fn new(api_key: String) -> Self {
-        Self {
-            client: Client::new(),
-            api_key,
-        }
+        // Generation can be slow, but a stalled connection must not hang forever
+        let client = Client::builder()
+            .connect_timeout(Duration::from_secs(15))
+            .read_timeout(Duration::from_secs(90))
+            .build()
+            .unwrap_or_else(|err| {
+                tracing::warn!("Failed to build HTTP client with timeouts: {}", err);
+                Client::new()
+            });
+        Self { client, api_key }
     }
 
-    pub async fn list_models(&self) -> Result<Vec<Model>, Box<dyn std::error::Error>> {
-        let url = "https://openrouter.ai/api/v1/models";
+    /// Lists the models available on OpenRouter, free models first
+    pub async fn list_models(&self) -> Result<Vec<Model>> {
+        #[derive(Deserialize)]
+        struct Pricing {
+            prompt: Option<String>,
+            completion: Option<String>,
+        }
+        #[derive(Deserialize)]
+        struct ApiModel {
+            id: String,
+            name: Option<String>,
+            pricing: Option<Pricing>,
+        }
+        #[derive(Deserialize)]
+        struct ModelList {
+            data: Vec<ApiModel>,
+        }
 
-        let resp = self.client
-            .get(url)
-            .header("Authorization", format!("Bearer {}", self.api_key))
+        let response = self
+            .client
+            .get(MODELS_URL)
+            .timeout(Duration::from_secs(30))
             .send()
-            .await?;
+            .await
+            .context("Failed to fetch the model list")?;
+        let status = response.status();
+        if !status.is_success() {
+            bail!("Fetching the model list failed ({})", status);
+        }
+        let list: ModelList = response.json().await.context("Invalid model list")?;
 
-        let json: serde_json::Value = resp.json().await?;
-        let models: Vec<Model> = serde_json::from_value(json["data"].clone())?;
-
+        let is_zero = |price: &Option<String>| price.as_deref().is_some_and(|p| p.parse::<f64>() == Ok(0.0));
+        let mut models: Vec<Model> = list
+            .data
+            .into_iter()
+            .map(|m| Model {
+                is_free: m.id.ends_with(":free")
+                    || m.pricing.as_ref().is_some_and(|p| is_zero(&p.prompt) && is_zero(&p.completion)),
+                name: m.name.unwrap_or_else(|| m.id.clone()),
+                id: m.id,
+            })
+            .collect();
+        models.sort_by(|a, b| b.is_free.cmp(&a.is_free).then_with(|| a.id.cmp(&b.id)));
         Ok(models)
     }
 
-    // Generate a learning module based on a topic and user level
+    /// Generates a learning module for a topic. `on_text` receives the text as it streams in.
     pub async fn generate_learning_module(
         &self,
         topic: &Topic,
         level: u8,
+        config: &Config,
+        on_text: impl FnMut(&str) + Send,
     ) -> Result<LearningModule> {
-        // Check if API key is available
+        let prompt = prompts::learning_module(topic, level, config);
+        let response = self.complete_streaming(&config.model, prompt, on_text).await?;
+        Ok(module_from_response(&topic.topic, &response))
+    }
+
+    /// Runs a streaming completion. Retries on rate limits and server errors
+    /// before any text has been received.
+    pub async fn complete_streaming(
+        &self,
+        model: &str,
+        prompt: String,
+        mut on_text: impl FnMut(&str) + Send,
+    ) -> Result<String> {
         if self.api_key.is_empty() {
-            anyhow::bail!(
-                "OpenRouter API key is not set. Please set the OPENROUTER_API_KEY environment variable."
-            );
+            bail!("OpenRouter API key is not set. Please set the OPENROUTER_API_KEY environment variable.");
         }
 
-        // Create the prompt for the LLM
-        let prompt = self.create_prompt(topic, level);
+        let request = ChatRequest { model, messages: vec![Message { role: "user", content: prompt }], stream: true };
 
-        // Call the OpenRouter API
-        let response = self.call_openrouter_api(prompt).await?;
+        let mut attempt = 0;
+        let response = loop {
+            attempt += 1;
+            let result = self
+                .client
+                .post(CHAT_URL)
+                .bearer_auth(&self.api_key)
+                .header("X-Title", "RustMentor")
+                .json(&request)
+                .send()
+                .await;
 
-        // Save the response to a file for debugging
-        //let current_datetime = Local::now().format("%Y-%m-%d_%H-%M-%S").to_string();
-        //let filename = format!("response_{}.txt", current_datetime);
-        //std::fs::write(&filename, &response)?;
-        // Parse the response into a LearningModule
-        self.parse_response(response, topic)
-    }
-
-    // Create a prompt for the LLM based on the topic, level, and customization options
-    // In your struct impl
-    fn create_prompt(&self, topic: &Topic, level: u8) -> String {
-        let config = Config::load().unwrap();
-        let customization = config.content_customization;
-
-        let level_description = match level {
-            1 => "Absolute Beginner",
-            2 => "Beginner",
-            3 => "Early Intermediate",
-            4 => "Intermediate",
-            5 => "Solid Intermediate",
-            6 => "Advanced Intermediate",
-            7 => "Early Advanced",
-            8 => "Advanced",
-            9 => "Very Advanced",
-            10 => "Expert",
-            _ => "Intermediate",
-        };
-
-        // Get customization settings as text
-        let complexity_text = match customization.code_complexity {
-            crate::config::CodeComplexity::Simple => "simple and straightforward",
-            crate::config::CodeComplexity::Moderate => "moderately complex",
-            crate::config::CodeComplexity::Complex => "complex and advanced",
-        };
-
-        let verbosity_text = match customization.explanation_verbosity {
-            crate::config::ExplanationVerbosity::Concise => "concise and to-the-point",
-            crate::config::ExplanationVerbosity::Moderate => "moderately detailed",
-            crate::config::ExplanationVerbosity::Detailed => "highly detailed and comprehensive",
-        };
-
-        let focus_instruction = match customization.focus_area {
-            crate::config::FocusArea::Concepts => "Focus more on explaining concepts than on code examples or exercises.",
-            crate::config::FocusArea::CodeExamples => "Focus more on providing code examples than on concepts or exercises.",
-            crate::config::FocusArea::Exercises => "Focus more on providing exercises than on concepts or code examples.",
-            crate::config::FocusArea::Balanced => "Provide a balanced mix of concepts, code examples, and exercises.",
-        };
-
-        let learning_goal = customization.learning_goal.to_string();
-
-        // The refined prompt is much more explicit and strict.
-        format!(
-            r#"
-You are an expert Rust programming language tutor and a specialist in generating structured data.
-Your task is to create a learning module about the topic '{topic}' for a Rust programmer at the '{level_description}' level but focus on  '{learning_goal}' leaning goal subjet.
-
-**Output Formatting Rules:**
-- Your output should be *only* the text of the prompt described above.
-- Do not include any conversational text or explanations outside of the prompt itself.
-- Structure the entire output clearly using the following delimiters.
-- Ensure the "explanation",  "exercise descriptions" sections are valid Markdown.
-- Ensure "exercise code"  sections are valid RUST language code.
-- Output Structure Structure: 
-
-    ```
-    <<<explanation: [explanation title]>>>
-    [Detailed explanation for the topic ...]
-
-    <<<code_snippet 1: [code snippets title 1]>>>
-    // code snippet: [ code snippet description 1]
-    [ The actual example code snippet 1 ... ]
-
-    <<<code_snippet 2: [code snippet title 2]>>>
-    // code snippet: [ code snippet description 2]
-    [ The actual example code snippet 2 ... ]
-
-    <<<code_snippet n: [code snippet title n]>>>
-    // code snippet: [ code snippet description n]
-    [ The actual example code snippet n ... ]
-
-    <<<exercise 1: [ exercise name 1 ]>>>
-    // exercise description: [  exercise description 1 ]
-    [ The actual exercise 1 code ... ]
-
-    <<<exercise 2: [ exercise name 2 ]>>>
-    // exercise description: [ exercise description 2] 
-    [ The actual exercise 2 code ... ]
-
-    <<<exercise n: [ exercise name n ]>>>
-    // exercise description: [ exercise description n] 
-    [ The actual exercise n code ... ]
-
-    ```
-
-**Content Guidelines:**
--   `explanation`: Provide a {verbosity_text} explanation of the topic, tailored to the '{level_description}' level while focusing on subject "'{learning_goal}'" as the learning goal.
--   `code_snippets`: Provide several complete, runnable, and well-commented Rust code examples. The code should be {complexity_text}, appropriate for the target level.
--   `exercises`: Provide several distinct practice exercises. They should be clear problem statements that allow the user to apply the concepts from the explanation and code snippets.
--   {focus_instruction}
-
-**Request:**
-Generate the learning module for topic '{topic}' at the '{level_description}' level, following all rules above.
-Source of this topic: {source}
-"#,
-            topic = topic.topic,
-            level_description = level_description,
-            source = topic.source,
-            verbosity_text = verbosity_text,
-            complexity_text = complexity_text,
-            focus_instruction = focus_instruction
-        )
-    }
-
-    // Call the OpenRouter API with the prompt
-    pub async fn call_openrouter_api(&self, prompt: String) -> Result<String> {
-        // Create the request body
-        let model_id = Config::load().unwrap().model;
-        let request = OpenRouterRequest {
-            model: model_id, // You can change this to a different model if needed
-            messages: vec![Message {
-                role: "user".to_string(),
-                content: prompt,
-            }],
-        };
-
-        // Make the API call
-        let response = self
-            .client
-            .post("https://openrouter.ai/api/v1/chat/completions")
-            .header("Authorization", format!("Bearer {}", self.api_key))
-            .header("Content-Type", "application/json")
-            .json(&request)
-            .send()
-            .await?;
-
-        // Check if the request was successful
-        if !response.status().is_success() {
-            let error_text = response.text().await?;
-            anyhow::bail!("OpenRouter API request failed: {}", error_text);
-        }
-
-        // Parse the response
-        let response_data: OpenRouterResponse = response.json().await?;
-
-        // Extract the content from the response
-        if let Some(choice) = response_data.choices.first() {
-            Ok(choice.message.content.clone())
-        } else {
-            anyhow::bail!("No content in OpenRouter API response");
-        }
-    }
-
-    // Parse the LLM response into a LearningModule
-    // Assuming RawLearningModule is defined as above
-    // And LearningModule is the struct you want to create
-
-    pub(crate) fn parse_response(&self, response: String, topic: &Topic) -> Result<LearningModule> {
-
-        let prompt_res = PromptResponse::parse_response(response.clone());
-        match prompt_res {
-            Ok(prompt_res) => {
-                // Now you have a strongly-typed struct.
-                // You can add extra checks here if you want (e.g., ensure vecs are not empty).
-                Ok(LearningModule {
-                    topic: topic.topic.clone(),
-                    explanation: prompt_res.explanation,
-                    code_snippets: if prompt_res.code_snippets.is_empty() {
-                        vec![CodeSnippet {
-                            title: "No code examples provided".to_string(),
-                            description: "// No code examples provided".to_string(),
-                            code: "// No code examples provided".to_string(),
-                        }]
-                    } else {
-                        prompt_res.code_snippets
-                    },
-                    exercises: if prompt_res.exercises.is_empty() {
-                        vec![Exercise {
-                            name: "No exercises provided".to_string(),
-                            description: "// No exercises provided".to_string(),
-                            code: "// No exercises provided".to_string(),
-                            }
-                        ]
-                    } else {
-                        prompt_res.exercises
-                    },
-                    additional_resources: None, // Will be populated by the App when displayed
-                })
+            match result {
+                Ok(response) if response.status().is_success() => break response,
+                Ok(response) => {
+                    let status = response.status();
+                    let retry_after = response
+                        .headers()
+                        .get(reqwest::header::RETRY_AFTER)
+                        .and_then(|v| v.to_str().ok())
+                        .map(str::to_string);
+                    let body = response.text().await.unwrap_or_default();
+                    if attempt < MAX_ATTEMPTS && is_retryable(status) {
+                        let delay = retry_delay(attempt, retry_after.as_deref());
+                        tracing::warn!("OpenRouter returned {}, retrying in {:?}", status, delay);
+                        tokio::time::sleep(delay).await;
+                        continue;
+                    }
+                    let message = serde_json::from_str::<serde_json::Value>(&body)
+                        .ok()
+                        .and_then(|v| error_message(&v))
+                        .unwrap_or(body);
+                    bail!("OpenRouter API request failed ({}): {}", status, message);
+                }
+                Err(err) if attempt < MAX_ATTEMPTS && err.is_connect() => {
+                    let delay = retry_delay(attempt, None);
+                    tracing::warn!("Connection to OpenRouter failed ({}), retrying in {:?}", err, delay);
+                    tokio::time::sleep(delay).await;
+                }
+                Err(err) => return Err(anyhow!(err).context("Failed to reach OpenRouter")),
             }
-            Err(e) => {
-                // This fallback will now be triggered far less often.
-                tracing::warn!("Failed to parse LLM response as JSON: {}", e);
-                tracing::debug!("Problematic response body: {}", response); // Log the body for debugging
+        };
 
-                // Your existing fallback logic is fine.
-                Ok(LearningModule {
-                    topic: topic.topic.clone(),
-                    explanation: format!(
-                        "The AI generated a response that couldn't be parsed correctly. Here's the raw response:\n\n{}",
-                        response
-                    ),
-                    code_snippets:  vec![CodeSnippet {
-                        title: "Error - No code examples extracted.".to_string(),
-                        description: "// No code examples extracted".to_string(),
-                        code: "// No code examples extracted".to_string(),
-                    }],
-                    exercises: vec![Exercise {
-                        name: "Error - No exercises extracted from LLM response".to_string(),
-                        description: "// No exercises ...".to_string(),
-                        code: "// No code provided".to_string(),
-                    }],
-                    additional_resources: None,
-                })
+        let mut text = String::new();
+        let mut buffer: Vec<u8> = Vec::new();
+        let mut stream = response.bytes_stream();
+        'stream: while let Some(chunk) = stream.next().await {
+            let chunk = chunk.context("The response stream was interrupted")?;
+            buffer.extend_from_slice(&chunk);
+            while let Some(newline) = buffer.iter().position(|&b| b == b'\n') {
+                let line: Vec<u8> = buffer.drain(..=newline).collect();
+                match parse_stream_line(&String::from_utf8_lossy(&line)) {
+                    StreamEvent::Delta(delta) => {
+                        text.push_str(&delta);
+                        on_text(&delta);
+                    }
+                    StreamEvent::Done => break 'stream,
+                    StreamEvent::Error(message) => bail!("OpenRouter reported an error: {}", message),
+                    StreamEvent::Ignore => {}
+                }
             }
         }
+
+        if text.trim().is_empty() {
+            bail!("The model returned an empty response");
+        }
+        Ok(text)
+    }
+}
+
+/// Builds a learning module from the model's response. If the response doesn't follow
+/// the expected format, the raw text is shown as the explanation.
+pub fn module_from_response(topic: &str, response: &str) -> LearningModule {
+    match parsing::parse_module_response(response) {
+        Ok(parsed) => LearningModule {
+            topic: topic.to_string(),
+            explanation: parsed.explanation,
+            code_snippets: parsed.code_snippets,
+            exercises: parsed.exercises,
+            additional_resources: None, // Added by the App
+        },
+        Err(err) => {
+            tracing::warn!("Failed to parse the learning module response: {}", err);
+            tracing::debug!("Unparseable response: {}", response);
+            LearningModule {
+                topic: topic.to_string(),
+                explanation: format!(
+                    "> The response didn't follow the expected format, so it is shown as is.\n\n{}",
+                    response.trim()
+                ),
+                code_snippets: vec![],
+                exercises: vec![],
+                additional_resources: None,
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parses_stream_lines() {
+        assert_eq!(
+            parse_stream_line(r#"data: {"choices":[{"delta":{"content":"Hi"}}]}"#),
+            StreamEvent::Delta("Hi".to_string())
+        );
+        assert_eq!(parse_stream_line("data: [DONE]"), StreamEvent::Done);
+        assert_eq!(parse_stream_line(": OPENROUTER PROCESSING"), StreamEvent::Ignore);
+        assert_eq!(parse_stream_line(""), StreamEvent::Ignore);
+        assert_eq!(parse_stream_line(r#"data: {"choices":[{"delta":{"role":"assistant"}}]}"#), StreamEvent::Ignore);
+        assert_eq!(
+            parse_stream_line(r#"data: {"error":{"message":"Rate limited","code":429}}"#),
+            StreamEvent::Error("Rate limited".to_string())
+        );
+    }
+
+    #[test]
+    fn retry_delay_is_bounded() {
+        assert_eq!(retry_delay(1, None), Duration::from_secs(2));
+        assert_eq!(retry_delay(1, Some("3")), Duration::from_secs(3));
+        assert_eq!(retry_delay(1, Some("3600")), MAX_RETRY_DELAY);
+        assert!(is_retryable(StatusCode::TOO_MANY_REQUESTS));
+        assert!(is_retryable(StatusCode::BAD_GATEWAY));
+        assert!(!is_retryable(StatusCode::UNAUTHORIZED));
+    }
+
+    #[test]
+    fn unparseable_module_shows_raw_text() {
+        let module = module_from_response("Topic", "just some text");
+        assert!(module.explanation.contains("just some text"));
+        assert!(module.code_snippets.is_empty());
     }
 }

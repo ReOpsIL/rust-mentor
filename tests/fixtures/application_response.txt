@@ -1,0 +1,26 @@
+<<<application_name>>>
+Borrow Checker Quest
+<<<end>>>
+
+<<<application_description>>>
+A terminal game that teaches ownership through puzzles.
+<<<end>>>
+
+<<<application_features>>>
+- Levels that teach moves and borrows
+* Score tracking
+<<<end>>>
+
+<<<code_snippet:Main Code>>>
+```rust
+fn main() {
+    println!("Welcome to Borrow Checker Quest!");
+}
+```
+<<<end>>>
+
+<<<code_snippet:Additional Module 1>>>
+pub fn score(level: u32) -> u32 {
+    level * 10
+}
+<<<end>>>

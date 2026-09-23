@@ -1,20 +1,40 @@
-use directories::UserDirs;
+// src/config.rs
+use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 use std::fs;
-use std::io::Read;
-use toml_edit;
-use crate::app::LearningGoal;
-use crate::question_generator::QuestionType;
+use std::path::{Path, PathBuf};
+use strum::{Display, EnumIter, IntoEnumIterator};
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+pub const DEFAULT_MODEL: &str = "google/gemma-3n-e4b-it:free";
+pub const MIN_QUESTIONS: usize = 3;
+pub const MAX_QUESTIONS: usize = 10;
+
+/// Steps an enum value to the next (or previous) variant, wrapping around
+pub trait Cycle: IntoEnumIterator + PartialEq + Copy {
+    fn cycle(self, forward: bool) -> Self {
+        let all: Vec<Self> = Self::iter().collect();
+        let index = all.iter().position(|v| *v == self).unwrap_or(0);
+        let len = all.len();
+        let next = if forward { (index + 1) % len } else { (index + len - 1) % len };
+        all[next]
+    }
+}
+
+impl<T: IntoEnumIterator + PartialEq + Copy> Cycle for T {}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[serde(default)]
 pub struct Config {
     pub model: String,
+    /// Where Cargo projects are created; empty means the current directory
+    pub projects_dir: String,
     pub learning_resources: LearningResources,
     pub content_customization: ContentCustomization,
     pub question_generator_settings: QuestionGeneratorSettings,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[serde(default)]
 pub struct LearningResources {
     pub show_official_docs: bool,
     pub show_community_resources: bool,
@@ -22,7 +42,8 @@ pub struct LearningResources {
     pub show_github_repos: bool,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Default)]
+#[serde(default)]
 pub struct ContentCustomization {
     pub code_complexity: CodeComplexity,
     pub explanation_verbosity: ExplanationVerbosity,
@@ -30,366 +51,355 @@ pub struct ContentCustomization {
     pub learning_goal: LearningGoal,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Default, Display, EnumIter)]
 pub enum CodeComplexity {
     Simple,
+    #[default]
     Moderate,
     Complex,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Default, Display, EnumIter)]
 pub enum ExplanationVerbosity {
     Concise,
+    #[default]
     Moderate,
     Detailed,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Default, Display, EnumIter)]
 pub enum FocusArea {
     Concepts,
+    #[strum(to_string = "Code Examples")]
     CodeExamples,
     Exercises,
+    #[default]
     Balanced,
 }
 
-const MIN_QUESTIONS: usize = 3;
-const MAX_QUESTIONS: usize =  10;
-#[derive(Serialize, Deserialize, Debug, Clone)]
+/// Which kinds of questions the question generator asks
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Default, Display, EnumIter)]
+pub enum QuestionStyle {
+    #[default]
+    Mixed,
+    #[strum(to_string = "Yes/No")]
+    YesNo,
+    #[strum(to_string = "Multiple Choice")]
+    MultipleChoice,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[serde(default)]
 pub struct QuestionGeneratorSettings {
     pub num_questions: usize,
-    pub default_question_type: QuestionType,
+    pub question_style: QuestionStyle,
     pub enable_application_generation: bool,
 }
 
+// Learning goals for personalized learning paths.
+// Variant names are stored in the config file, so they must not be renamed.
+#[allow(clippy::upper_case_acronyms)]
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Default, Display, EnumIter)]
+pub enum LearningGoal {
+    #[strum(to_string = "AR/VR")]
+    ARVR,
+    #[strum(to_string = "Async Programming")]
+    AsyncProgramming,
+    #[strum(to_string = "Big Data")]
+    BigData,
+    Bioinformatics,
+    Bitcoin,
+    #[strum(to_string = "Cloud Computing")]
+    CloudComputing,
+    #[strum(to_string = "Computer Vision")]
+    ComputerVision,
+    Concurrency,
+    Cuda, // Compute Unified Device Architecture (for GPU programming)
+    Cybersecurity,
+    DICOM, // Medical Imaging standard
+    #[strum(to_string = "Data Science")]
+    DataScience,
+    Databases,
+    #[strum(to_string = "Deep Learning")]
+    DeepLearning,
+    DevOps,
+    #[strum(to_string = "Distributed Systems")]
+    DistributedSystems,
+    #[strum(to_string = "Edge Computing")]
+    EdgeComputing,
+    #[strum(to_string = "Embedded Systems")]
+    EmbeddedSystems,
+    #[strum(to_string = "Ethical AI")]
+    EthicalAI,
+    GANs, // Generative Adversarial Networks
+    GPU,
+    #[default]
+    General,
+    Graphics,
+    HL7, // Medical data exchange standard
+    #[strum(to_string = "Image Processing")]
+    ImageProcessing,
+    #[strum(to_string = "Machine Learning")]
+    MachineLearning,
+    #[strum(to_string = "Medical Imaging")]
+    MedicalImaging,
+    #[strum(to_string = "Microservices")]
+    MicroServices,
+    MicroVM,
+    #[strum(to_string = "Natural Language Processing")]
+    NaturalLanguageProcessing,
+    Networking,
+    #[strum(to_string = "Operating Systems")]
+    OperatingSystems,
+    PyTorch,
+    #[strum(to_string = "Quantum Computing")]
+    QuantumComputing,
+    ROS, // Robot Operating System
+    #[strum(to_string = "Reinforcement Learning")]
+    ReinforcementLearning,
+    Robotics,
+    SLAM, // Simultaneous Localization and Mapping
+    #[strum(to_string = "Sensor Fusion")]
+    SensorFusion,
+    #[strum(to_string = "Systems Programming")]
+    SystemsProgramming,
+    TUI, // Terminal User Interface
+    Transformers,
+    #[strum(to_string = "User Interface")]
+    UserInterface,
+    #[strum(to_string = "Web Development")]
+    WebDevelopment,
+}
+
+impl Default for Config {
+    fn default() -> Self {
+        Config {
+            model: DEFAULT_MODEL.to_string(),
+            projects_dir: String::new(),
+            learning_resources: LearningResources::default(),
+            content_customization: ContentCustomization::default(),
+            question_generator_settings: QuestionGeneratorSettings::default(),
+        }
+    }
+}
+
+impl Default for LearningResources {
+    fn default() -> Self {
+        LearningResources {
+            show_official_docs: true,
+            show_community_resources: true,
+            show_crates_io: true,
+            show_github_repos: true,
+        }
+    }
+}
+
+impl Default for QuestionGeneratorSettings {
+    fn default() -> Self {
+        QuestionGeneratorSettings {
+            num_questions: 5,
+            question_style: QuestionStyle::default(),
+            enable_application_generation: true,
+        }
+    }
+}
+
 impl Config {
-    pub fn load() -> Result<Config, Box<dyn std::error::Error>> {
-        let user_dirs = UserDirs::new().expect("Could not find user directories");
-        let config_path = user_dirs.home_dir().join("rust-mentor.conf");
-
-        let config: Config = if config_path.exists() {
-            let mut config_file = fs::File::open(&config_path)?;
-            let mut config_string = String::new();
-            config_file.read_to_string(&mut config_string)?;
-            toml_edit::de::from_str(&config_string)?
-        } else {
-            let default_config = Config {
-                model: "google/gemma-3n-e4b-it:free".to_string(),
-                learning_resources: LearningResources {
-                    show_official_docs: true,
-                    show_community_resources: true,
-                    show_crates_io: true,
-                    show_github_repos: true,
-                },
-                content_customization: ContentCustomization {
-                    code_complexity: CodeComplexity::Moderate,
-                    explanation_verbosity: ExplanationVerbosity::Moderate,
-                    focus_area: FocusArea::Balanced,
-                    learning_goal: LearningGoal::General,
-                },
-                question_generator_settings: QuestionGeneratorSettings {
-                    num_questions: 5,
-                    default_question_type: QuestionType::Multiple,
-                    enable_application_generation: true,
-                },
-            };
-            let toml = toml::to_string(&default_config)?;
-            fs::write(&config_path, toml)?;
-            default_config
-        };
-
+    /// Parses a config file; missing fields take their default values
+    pub fn from_toml(text: &str) -> Result<Config> {
+        let mut config: Config = toml::from_str(text)?;
+        config.question_generator_settings.num_questions =
+            config.question_generator_settings.num_questions.clamp(MIN_QUESTIONS, MAX_QUESTIONS);
+        if config.model.trim().is_empty() {
+            config.model = DEFAULT_MODEL.to_string();
+        }
         Ok(config)
     }
 
-    pub fn save(&self) -> Result<(), Box<dyn std::error::Error>> {
-        let user_dirs = UserDirs::new().expect("Could not find user directories");
-        let config_path = user_dirs.home_dir().join("rust-mentor.conf");
-        let toml = toml_edit::ser::to_string(self)?;
-        fs::write(&config_path, toml)?;
+    pub fn to_toml(&self) -> Result<String> {
+        Ok(toml::to_string(self)?)
+    }
+
+    /// Directory for new Cargo projects (`~` is expanded)
+    pub fn projects_dir(&self) -> PathBuf {
+        let dir = self.projects_dir.trim();
+        if dir.is_empty() {
+            return std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
+        }
+        match (dir.strip_prefix("~/"), directories::UserDirs::new()) {
+            (Some(rest), Some(user_dirs)) => user_dirs.home_dir().join(rest),
+            _ => PathBuf::from(dir),
+        }
+    }
+}
+
+/// Default location of the config file, e.g. `~/.config/rust-mentor/config.toml` on Linux
+/// or `~/Library/Application Support/rust-mentor/config.toml` on macOS
+pub fn default_config_path() -> Option<PathBuf> {
+    directories::ProjectDirs::from("", "", "rust-mentor").map(|dirs| dirs.config_dir().join("config.toml"))
+}
+
+/// Config file location used by earlier versions
+fn legacy_config_path() -> Option<PathBuf> {
+    directories::UserDirs::new().map(|dirs| dirs.home_dir().join("rust-mentor.conf"))
+}
+
+/// Holds the configuration and persists every change to the config file
+pub struct ConfigService {
+    config: Config,
+    path: Option<PathBuf>, // None: in-memory only
+}
+
+impl ConfigService {
+    /// Loads the config file, creating it with defaults (or migrating the legacy
+    /// `~/rust-mentor.conf`) if it doesn't exist yet
+    pub fn load() -> Result<Self> {
+        let path = default_config_path().context("Could not determine the config directory")?;
+        Self::load_from(&path, legacy_config_path().as_deref())
+    }
+
+    fn load_from(path: &Path, legacy_path: Option<&Path>) -> Result<Self> {
+        let config = if path.exists() {
+            let text =
+                fs::read_to_string(path).with_context(|| format!("Failed to read config file {}", path.display()))?;
+            Config::from_toml(&text)
+                .with_context(|| format!("Invalid config file {} - fix or delete it", path.display()))?
+        } else if let Some(legacy_path) = legacy_path.filter(|p| p.exists()) {
+            tracing::info!("Migrating config from {}", legacy_path.display());
+            let text = fs::read_to_string(legacy_path)?;
+            Config::from_toml(&text).unwrap_or_else(|err| {
+                tracing::warn!("Ignoring invalid legacy config {}: {}", legacy_path.display(), err);
+                Config::default()
+            })
+        } else {
+            Config::default()
+        };
+
+        let service = ConfigService { config, path: Some(path.to_path_buf()) };
+        // Write back so new fields appear in the file (and the file exists)
+        service.save()?;
+        tracing::info!("Loaded config from {}: {:?}", path.display(), service.config);
+        Ok(service)
+    }
+
+    /// A config service that is not backed by a file
+    #[cfg(test)]
+    pub fn in_memory(config: Config) -> Self {
+        ConfigService { config, path: None }
+    }
+
+    pub fn config(&self) -> &Config {
+        &self.config
+    }
+
+    pub fn path(&self) -> Option<&Path> {
+        self.path.as_deref()
+    }
+
+    /// Applies a change and saves the config file
+    pub fn update(&mut self, change: impl FnOnce(&mut Config)) -> Result<()> {
+        change(&mut self.config);
+        self.save()
+    }
+
+    fn save(&self) -> Result<()> {
+        let Some(path) = &self.path else {
+            return Ok(());
+        };
+        if let Some(dir) = path.parent() {
+            fs::create_dir_all(dir).with_context(|| format!("Failed to create config directory {}", dir.display()))?;
+        }
+        fs::write(path, self.config.to_toml()?)
+            .with_context(|| format!("Failed to write config file {}", path.display()))?;
         Ok(())
     }
 }
 
-pub struct ConfigService {
-    config: Config,
-}
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-
-impl ConfigService {
-    pub fn new() -> Self {
-        let config = Config::load();
-        match config {
-            Ok(config) => {
-                tracing::info!("Loaded config: {:?}", config);
-                ConfigService { config }
-            },
-            Err(_) => {
-                tracing::error!("Failed to load config (~/rust-mentor.conf) - delete config file and rerun.");
-                std::process::exit(-1);
-            }
-        }
+    #[test]
+    fn missing_fields_use_defaults() {
+        let config = Config::from_toml("model = \"some/model\"\n").unwrap();
+        assert_eq!(config.model, "some/model");
+        assert_eq!(config.learning_resources, LearningResources::default());
+        assert_eq!(config.question_generator_settings.num_questions, 5);
     }
 
-    pub fn get_config(&self) -> &Config {
-        &self.config
+    #[test]
+    fn legacy_config_is_readable() {
+        // Format written by earlier versions (includes a field that no longer exists)
+        let legacy = r#"
+model = "google/gemini-flash"
+
+[learning_resources]
+show_official_docs = false
+show_community_resources = true
+show_crates_io = true
+show_github_repos = true
+
+[content_customization]
+code_complexity = "Complex"
+explanation_verbosity = "Concise"
+focus_area = "CodeExamples"
+learning_goal = "ARVR"
+
+[question_generator_settings]
+num_questions = 42
+default_question_type = "Multiple"
+enable_application_generation = true
+"#;
+        let config = Config::from_toml(legacy).unwrap();
+        assert_eq!(config.model, "google/gemini-flash");
+        assert!(!config.learning_resources.show_official_docs);
+        assert_eq!(config.content_customization.code_complexity, CodeComplexity::Complex);
+        assert_eq!(config.content_customization.learning_goal, LearningGoal::ARVR);
+        assert_eq!(config.question_generator_settings.num_questions, MAX_QUESTIONS);
     }
 
-    pub fn update_model(&mut self, model: String) -> Result<(), Box<dyn std::error::Error>> {
-        self.config.model = model;
-        self.config.save()
+    #[test]
+    fn round_trips_through_toml() {
+        let mut config = Config::default();
+        config.content_customization.focus_area = FocusArea::Exercises;
+        config.question_generator_settings.question_style = QuestionStyle::YesNo;
+        let parsed = Config::from_toml(&config.to_toml().unwrap()).unwrap();
+        assert_eq!(parsed, config);
     }
 
-    // Learning resources methods
-    pub fn get_learning_resources(&self) -> &LearningResources {
-        &self.config.learning_resources
+    #[test]
+    fn cycle_wraps_in_both_directions() {
+        assert_eq!(CodeComplexity::Complex.cycle(true), CodeComplexity::Simple);
+        assert_eq!(CodeComplexity::Simple.cycle(false), CodeComplexity::Complex);
+        assert_eq!(LearningGoal::WebDevelopment.cycle(true), LearningGoal::ARVR);
+        assert_eq!(LearningGoal::General.cycle(true), LearningGoal::Graphics);
     }
 
-    pub fn update_learning_resources(&mut self, resources: LearningResources) -> Result<(), Box<dyn std::error::Error>> {
-        self.config.learning_resources = resources;
-        self.config.save()
+    #[test]
+    fn display_names() {
+        assert_eq!(LearningGoal::ARVR.to_string(), "AR/VR");
+        assert_eq!(LearningGoal::WebDevelopment.to_string(), "Web Development");
+        assert_eq!(FocusArea::CodeExamples.to_string(), "Code Examples");
     }
 
-    pub fn toggle_official_docs(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-        self.config.learning_resources.show_official_docs = !self.config.learning_resources.show_official_docs;
-        self.config.save()
-    }
+    #[test]
+    fn creates_and_migrates_config_files() {
+        let dir = std::env::temp_dir().join(format!("rust-mentor-test-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&dir);
+        fs::create_dir_all(&dir).unwrap();
+        let legacy = dir.join("rust-mentor.conf");
+        fs::write(&legacy, "model = \"legacy/model\"\n").unwrap();
+        let path = dir.join("config").join("config.toml");
 
-    pub fn toggle_community_resources(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-        self.config.learning_resources.show_community_resources = !self.config.learning_resources.show_community_resources;
-        self.config.save()
-    }
+        let service = ConfigService::load_from(&path, Some(&legacy)).unwrap();
+        assert_eq!(service.config().model, "legacy/model");
+        assert!(path.exists());
 
-    pub fn toggle_crates_io(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-        self.config.learning_resources.show_crates_io = !self.config.learning_resources.show_crates_io;
-        self.config.save()
-    }
+        let mut service = ConfigService::load_from(&path, None).unwrap();
+        service.update(|c| c.model = "new/model".to_string()).unwrap();
+        let reloaded = ConfigService::load_from(&path, None).unwrap();
+        assert_eq!(reloaded.config().model, "new/model");
 
-    pub fn toggle_github_repos(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-        self.config.learning_resources.show_github_repos = !self.config.learning_resources.show_github_repos;
-        self.config.save()
-    }
-
-    // Content customization methods
-    pub fn get_content_customization(&self) -> &ContentCustomization {
-        &self.config.content_customization
-    }
-
-    pub fn update_content_customization(&mut self, customization: ContentCustomization) -> Result<(), Box<dyn std::error::Error>> {
-        self.config.content_customization = customization;
-        self.config.save()
-    }
-
-    pub fn update_code_complexity(&mut self, complexity: CodeComplexity) -> Result<(), Box<dyn std::error::Error>> {
-        self.config.content_customization.code_complexity = complexity;
-        self.config.save()
-    }
-
-    pub fn update_explanation_verbosity(&mut self, verbosity: ExplanationVerbosity) -> Result<(), Box<dyn std::error::Error>> {
-        self.config.content_customization.explanation_verbosity = verbosity;
-        self.config.save()
-    }
-
-    pub fn update_focus_area(&mut self, focus_area: FocusArea) -> Result<(), Box<dyn std::error::Error>> {
-        self.config.content_customization.focus_area = focus_area;
-        self.config.save()
-    }
-
-    pub fn increment_num_questions(&mut self) {
-        if self.config.question_generator_settings.num_questions < MAX_QUESTIONS {
-            self.config.question_generator_settings.num_questions += 1;
-        }
-    }
-    pub fn decrement_num_questions(&mut self) {
-        if self.config.question_generator_settings.num_questions > MIN_QUESTIONS {
-            self.config.question_generator_settings.num_questions -= 1;
-        }
-    }
-
-    pub fn cycle_code_complexity(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-        self.config.content_customization.code_complexity = match self.config.content_customization.code_complexity {
-            CodeComplexity::Simple => CodeComplexity::Moderate,
-            CodeComplexity::Moderate => CodeComplexity::Complex,
-            CodeComplexity::Complex => CodeComplexity::Simple,
-        };
-        self.config.save()
-    }
-
-    pub fn cycle_code_complexity_reverse(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-        self.config.content_customization.code_complexity = match self.config.content_customization.code_complexity {
-            CodeComplexity::Simple => CodeComplexity::Complex,
-            CodeComplexity::Moderate => CodeComplexity::Simple,
-            CodeComplexity::Complex => CodeComplexity::Moderate,
-        };
-        self.config.save()
-    }
-
-    pub fn cycle_explanation_verbosity(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-        self.config.content_customization.explanation_verbosity = match self.config.content_customization.explanation_verbosity {
-            ExplanationVerbosity::Concise => ExplanationVerbosity::Moderate,
-            ExplanationVerbosity::Moderate => ExplanationVerbosity::Detailed,
-            ExplanationVerbosity::Detailed => ExplanationVerbosity::Concise,
-        };
-        self.config.save()
-    }
-
-    pub fn cycle_explanation_verbosity_reverse(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-        self.config.content_customization.explanation_verbosity = match self.config.content_customization.explanation_verbosity {
-            ExplanationVerbosity::Concise => ExplanationVerbosity::Detailed,
-            ExplanationVerbosity::Moderate => ExplanationVerbosity::Concise,
-            ExplanationVerbosity::Detailed => ExplanationVerbosity::Moderate,
-        };
-        self.config.save()
-    }
-
-    pub fn cycle_focus_area(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-        self.config.content_customization.focus_area = match self.config.content_customization.focus_area {
-            FocusArea::Concepts => FocusArea::CodeExamples,
-            FocusArea::CodeExamples => FocusArea::Exercises,
-            FocusArea::Exercises => FocusArea::Balanced,
-            FocusArea::Balanced => FocusArea::Concepts,
-        };
-        self.config.save()
-    }
-
-    pub fn cycle_focus_area_reverse(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-        self.config.content_customization.focus_area = match self.config.content_customization.focus_area {
-            FocusArea::Concepts => FocusArea::Balanced,
-            FocusArea::CodeExamples => FocusArea::Concepts,
-            FocusArea::Exercises => FocusArea::CodeExamples,
-            FocusArea::Balanced => FocusArea::Exercises,
-        };
-        self.config.save()
-    }
-
-    pub fn cycle_learning_goal(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-        self.config.content_customization.learning_goal = match self.config.content_customization.learning_goal {
-            LearningGoal::ARVR => LearningGoal::AsyncProgramming,
-            LearningGoal::AsyncProgramming => LearningGoal::BigData,
-            LearningGoal::BigData => LearningGoal::Bioinformatics,
-            LearningGoal::Bioinformatics => LearningGoal::Bitcoin,
-            LearningGoal::Bitcoin => LearningGoal::CloudComputing,
-            LearningGoal::CloudComputing => LearningGoal::ComputerVision,
-            LearningGoal::ComputerVision => LearningGoal::Concurrency,
-            LearningGoal::Concurrency => LearningGoal::Cuda,
-            LearningGoal::Cuda => LearningGoal::Cybersecurity,
-            LearningGoal::Cybersecurity => LearningGoal::DICOM,
-            LearningGoal::DICOM => LearningGoal::DataScience,
-            LearningGoal::DataScience => LearningGoal::Databases,
-            LearningGoal::Databases => LearningGoal::DeepLearning,
-            LearningGoal::DeepLearning => LearningGoal::DevOps,
-            LearningGoal::DevOps => LearningGoal::DistributedSystems,
-            LearningGoal::DistributedSystems => LearningGoal::EdgeComputing,
-            LearningGoal::EdgeComputing => LearningGoal::EmbeddedSystems,
-            LearningGoal::EmbeddedSystems => LearningGoal::EthicalAI,
-            LearningGoal::EthicalAI => LearningGoal::GANs,
-            LearningGoal::GANs => LearningGoal::GPU,
-            LearningGoal::GPU => LearningGoal::General,
-            LearningGoal::General => LearningGoal::Graphics,
-            LearningGoal::Graphics => LearningGoal::HL7,
-            LearningGoal::HL7 => LearningGoal::ImageProcessing,
-            LearningGoal::ImageProcessing => LearningGoal::MachineLearning,
-            LearningGoal::MachineLearning => LearningGoal::MedicalImaging,
-            LearningGoal::MedicalImaging => LearningGoal::MicroServices,
-            LearningGoal::MicroServices => LearningGoal::MicroVM,
-            LearningGoal::MicroVM => LearningGoal::NaturalLanguageProcessing,
-            LearningGoal::NaturalLanguageProcessing => LearningGoal::Networking,
-            LearningGoal::Networking => LearningGoal::OperatingSystems,
-            LearningGoal::OperatingSystems => LearningGoal::PyTorch,
-            LearningGoal::PyTorch => LearningGoal::QuantumComputing,
-            LearningGoal::QuantumComputing => LearningGoal::ROS,
-            LearningGoal::ROS => LearningGoal::ReinforcementLearning,
-            LearningGoal::ReinforcementLearning => LearningGoal::Robotics,
-            LearningGoal::Robotics => LearningGoal::SLAM,
-            LearningGoal::SLAM => LearningGoal::SensorFusion,
-            LearningGoal::SensorFusion => LearningGoal::SystemsProgramming,
-            LearningGoal::SystemsProgramming => LearningGoal::TUI,
-            LearningGoal::TUI => LearningGoal::Transformers,
-            LearningGoal::Transformers => LearningGoal::UserInterface,
-            LearningGoal::UserInterface => LearningGoal::WebDevelopment,
-            LearningGoal::WebDevelopment => LearningGoal::ARVR,
-        };
-        self.config.save()
-    }
-
-    pub fn cycle_learning_goal_reverse(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-        self.config.content_customization.learning_goal = match self.config.content_customization.learning_goal {
-            LearningGoal::ARVR => LearningGoal::WebDevelopment,
-            LearningGoal::AsyncProgramming => LearningGoal::ARVR,
-            LearningGoal::BigData => LearningGoal::AsyncProgramming,
-            LearningGoal::Bioinformatics => LearningGoal::BigData,
-            LearningGoal::Bitcoin => LearningGoal::Bioinformatics,
-            LearningGoal::CloudComputing => LearningGoal::Bitcoin,
-            LearningGoal::ComputerVision => LearningGoal::CloudComputing,
-            LearningGoal::Concurrency => LearningGoal::ComputerVision,
-            LearningGoal::Cuda => LearningGoal::Concurrency,
-            LearningGoal::Cybersecurity => LearningGoal::Cuda,
-            LearningGoal::DICOM => LearningGoal::Cybersecurity,
-            LearningGoal::DataScience => LearningGoal::DICOM,
-            LearningGoal::Databases => LearningGoal::DataScience,
-            LearningGoal::DeepLearning => LearningGoal::Databases,
-            LearningGoal::DevOps => LearningGoal::DeepLearning,
-            LearningGoal::DistributedSystems => LearningGoal::DevOps,
-            LearningGoal::EdgeComputing => LearningGoal::DistributedSystems,
-            LearningGoal::EmbeddedSystems => LearningGoal::EdgeComputing,
-            LearningGoal::EthicalAI => LearningGoal::EmbeddedSystems,
-            LearningGoal::GANs => LearningGoal::EthicalAI,
-            LearningGoal::GPU => LearningGoal::GANs,
-            LearningGoal::General => LearningGoal::GPU,
-            LearningGoal::Graphics => LearningGoal::General,
-            LearningGoal::HL7 => LearningGoal::Graphics,
-            LearningGoal::ImageProcessing => LearningGoal::HL7,
-            LearningGoal::MachineLearning => LearningGoal::ImageProcessing,
-            LearningGoal::MedicalImaging => LearningGoal::MachineLearning,
-            LearningGoal::MicroServices => LearningGoal::MedicalImaging,
-            LearningGoal::MicroVM => LearningGoal::MicroServices,
-            LearningGoal::NaturalLanguageProcessing => LearningGoal::MicroVM,
-            LearningGoal::Networking => LearningGoal::NaturalLanguageProcessing,
-            LearningGoal::OperatingSystems => LearningGoal::Networking,
-            LearningGoal::PyTorch => LearningGoal::OperatingSystems,
-            LearningGoal::QuantumComputing => LearningGoal::PyTorch,
-            LearningGoal::ROS => LearningGoal::QuantumComputing,
-            LearningGoal::ReinforcementLearning => LearningGoal::ROS,
-            LearningGoal::Robotics => LearningGoal::ReinforcementLearning,
-            LearningGoal::SLAM => LearningGoal::Robotics,
-            LearningGoal::SensorFusion => LearningGoal::SLAM,
-            LearningGoal::SystemsProgramming => LearningGoal::SensorFusion,
-            LearningGoal::TUI => LearningGoal::SystemsProgramming,
-            LearningGoal::Transformers => LearningGoal::TUI,
-            LearningGoal::UserInterface => LearningGoal::Transformers,
-            LearningGoal::WebDevelopment => LearningGoal::UserInterface,
-        };
-        self.config.save()
-    }
-
-    // Question generator settings methods
-    pub fn get_question_generator_settings(&self) -> &QuestionGeneratorSettings {
-        &self.config.question_generator_settings
-    }
-
-    pub fn update_question_generator_settings(&mut self, settings: QuestionGeneratorSettings) -> Result<(), Box<dyn std::error::Error>> {
-        self.config.question_generator_settings = settings;
-        self.config.save()
-    }
-
-    pub fn update_num_questions(&mut self, num_questions: usize) -> Result<(), Box<dyn std::error::Error>> {
-        self.config.question_generator_settings.num_questions = num_questions;
-        self.config.save()
-    }
-
-    pub fn update_default_question_type(&mut self, question_type: QuestionType) -> Result<(), Box<dyn std::error::Error>> {
-        self.config.question_generator_settings.default_question_type = question_type;
-        self.config.save()
-    }
-
-    pub fn toggle_application_generation(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-        self.config.question_generator_settings.enable_application_generation = !self.config.question_generator_settings.enable_application_generation;
-        self.config.save()
-    }
-
-    pub fn cycle_question_type(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-        self.config.question_generator_settings.default_question_type = match self.config.question_generator_settings.default_question_type {
-            QuestionType::Binary => QuestionType::Multiple,
-            QuestionType::Multiple => QuestionType::Binary,
-        };
-        self.config.save()
+        fs::remove_dir_all(&dir).unwrap();
     }
 }

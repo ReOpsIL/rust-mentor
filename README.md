@@ -1,126 +1,88 @@
 # RustMentor
 
-RustMentor is an interactive terminal-based application designed to help users learn Rust programming language through personalized, AI-generated tutorials. It uses language models to create custom learning modules tailored to your skill level.
+RustMentor is a terminal application that helps you learn Rust with AI-generated material tailored to your skill
+level. Pick a level and a content source; RustMentor asks a few questions about the kind of program you'd like to
+build, generates a small Rust application from your answers, and prepares a learning module (explanation, runnable
+examples and exercises) on the same topic. Anything it generates can be written out as a Cargo project.
+
+It uses [OpenRouter](https://openrouter.ai), so any model available there can be used (a free model is the default).
 
 ## Features
 
-- **Personalized Learning**: Choose from 10 different skill levels, from absolute beginner to expert
-- **AI-Generated Content**: Uses OpenRouter API (with Google's Gemma 3 model) to generate custom learning modules
-- **Interactive Terminal UI**: Easy-to-navigate text-based interface
-- **Comprehensive Learning Modules**:
-  - Detailed explanations in Markdown format
-  - Runnable code examples with comments
-  - Practice exercises to reinforce learning
-- **Multiple Content Sources**:
-  - Rust Library (standard and community libraries)
-  - Rust by Example
-  - The Rust Programming Language book
-  - Random selection from all sources
-- **Content Customization**:
-  - Adjust code complexity (Simple, Moderate, Complex)
-  - Control explanation verbosity (Concise, Moderate, Detailed)
-  - Set the focus area (Concepts, Code Examples, Exercises, Balanced)
-  - Choose from over 40 specialized learning goals (Web Development, Systems Programming, Machine Learning, etc.)
-- **Learning Resources Management**:
-  - Toggle visibility of official documentation
-  - Control the display of community resources
-  - Show/hide crates.io packages
-  - Enable/disable GitHub repository suggestions
-- **Question Generator**:
-  - Generate quiz questions based on the current learning module
-  - Answer binary (Yes/No) or multiple-choice questions
-  - Customize the number of questions and question types
-- **Application Generator**:
-  - Create sample Rust applications based on answered questions
-  - Automatically generate Cargo projects for learning modules and applications
-- **Settings Management**: Dedicated settings screen for customizing your learning experience
+- **10 skill levels**, from absolute beginner to expert
+- **Content sources**: Rust library topics, *Rust By Example*, *The Rust Programming Language*, or all of them —
+  choose a topic from a searchable list filtered to your level, let RustMentor pick one at random, or type your own
+- **Questions → application → learning module** flow, with streaming output and a live preview while generating
+- **Learning modules** with Markdown explanations, syntax-highlighted examples, exercises with starter code and
+  links to documentation, forums, crates.io and GitHub
+- **Cargo projects**: examples become `cargo run --example …` targets, exercises become binaries
+- **History**: browse the modules generated in this session
+- **Settings**: code complexity, explanation verbosity, focus area, 40+ learning goals (web development, embedded,
+  machine learning, …), question style and count, and a model picker listing all OpenRouter models
 
 ## Installation
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/yourusername/RustMentor.git
-   cd RustMentor
-   ```
+Requirements: Rust (edition 2024, Rust 1.88 or newer), an [OpenRouter API key](https://openrouter.ai/keys) and a
+terminal with UTF-8 and color support.
 
-2. Build the project:
-   ```bash
-   cargo build --release
-   ```
+```bash
+git clone git@github.com:ReOpsIL/rust-mentor.git
+cd rust-mentor
+cargo install --path .        # or: cargo build --release
 
-3. Set up your OpenRouter API key:
-   ```bash
-   export OPENROUTER_API_KEY="your_api_key_here"
-   ```
+export OPENROUTER_API_KEY="your_api_key_here"
+rust-mentor                   # or: cargo run --release
+```
 
-   The application will create a configuration file at `~/rust-mentor.conf` on first run.
+## How to use
 
-## How to Use
+1. **Select your skill level** with ↑/↓ (or `j`/`k`, or `1`-`9` and `0` for 10) and press Enter.
+2. **Select a content source, then a topic.** A searchable list shows the source's topics for your level: type to
+   filter, ↑/↓ to move, Enter to choose. The first entry, **Random topic**, lets RustMentor pick one; if you type
+   something, the last entry turns your text into a **custom topic** (e.g. "lifetimes in async code").
+3. **Answer the questions** about the application you'd like to build: `y`/`n` for yes/no questions, `1`-`4` (or
+   `a`-`d`) for multiple choice. `←`/`→` move between questions; Enter generates the application once all are
+   answered.
+4. **Review the generated application.** Enter (or `c`) writes it as a Cargo project; Esc continues. The learning
+   module for the topic is generated in the background meanwhile.
+5. **Study the learning module.** Scroll with ↑/↓, PgUp/PgDn, `g`/`G`. `n` generates a module on a random topic,
+   `t` opens the topic list to choose the next one, `w` asks questions about the current topic, `c` writes the
+   module as a Cargo project, `[` and `]` browse history.
 
-1. **Start the application**:
-   ```bash
-   cargo run --release
-   ```
+Everywhere: `?` shows all keybindings, `s` opens the settings, Esc goes back (or cancels a running request), `q`
+quits.
 
-2. **Select your skill level** (1-10) using the up/down arrow keys or 'j'/'k' and press Enter.
+In the settings, Tab switches sections, ↑/↓ selects an option and ←/→ or Enter changes it. The **AI Model** section
+opens a searchable list of OpenRouter models (free models first).
 
-3. **Select a content source**:
-   - Rust Library (standard and community libraries)
-   - Rust By Example
-   - The Rust Programming Language
-   - Random (selects from any of the above sources)
+## Configuration
 
-4. **Navigate the learning module**:
-   - Scroll up/down: Arrow keys or 'j'/'k'
-   - Generate a new module: 'n'
-   - Generate questions: 'w'
-   - Access settings: 's'
-   - Return to level selection: Esc
-   - Show help: '?'
-   - Quit: 'q'
+Settings are saved automatically to `config.toml` in the configuration directory:
 
-5. **Answer questions**:
-   - Navigate between questions: Left/Right arrow keys or 'h'/'l'
-   - For binary questions: 'y' for Yes, 'n' for No
-   - For multiple-choice questions: '1'-'4' or 'a'-'d'
-   - Generate application (after answering all questions): Enter
-   - Return to learning module: Esc
+| Platform | Location |
+|---|---|
+| macOS | `~/Library/Application Support/rust-mentor/config.toml` |
+| Linux | `~/.config/rust-mentor/config.toml` |
 
-6. **View generated application**:
-   - Create Cargo project from application: Enter
-   - Return to learning module: Esc
+Settings from `~/rust-mentor.conf` (used by earlier versions) are migrated on first start. Besides the options in
+the settings screen, the file has a `projects_dir` option: the directory where Cargo projects are created (default:
+the current directory; `~` is expanded).
 
-7. **Customize your settings**:
-   - Navigate between settings sections: Tab
-   - Navigate options: Arrow keys or 'j'/'k'
-   - Toggle or cycle selected option: Left/Right arrow keys or 'j'/'k'
-   - Return to previous screen: Esc
+Logs are written to `rust-mentor.log` in the data directory (`~/Library/Application Support/rust-mentor/` on macOS,
+`~/.local/share/rust-mentor/` on Linux), never to the terminal.
 
-8. **Confirm quit**: Use left/right arrow keys to select Yes/No and press Enter.
+## Development
 
-## Requirements
+```bash
+cargo test                                   # unit tests, including parser fixtures and UI render tests
+cargo clippy --all-targets -- -D warnings
+cargo fmt
+```
 
-- Rust and Cargo installed
-- OpenRouter API key (sign up at [openrouter.ai](https://openrouter.ai))
-- Terminal with support for TUI applications
-
-## Dependencies
-
-- ratatui and crossterm for the terminal UI
-- tokio for async runtime
-- reqwest for API calls
-- serde and serde_json for JSON serialization/deserialization
-- syntect for syntax highlighting
-- anyhow for error handling
-- tracing and tracing-subscriber for logging
-- toml and toml_edit for configuration management
-- directories for finding user directories
-- textwrap for text formatting
-- lazy_static for lazy initialization
-- chrono for date and time handling
-- rand for random number generation
-- regex for regular expressions
+CI runs the same checks on Linux and macOS. The code layout is described in
+[docs/architecture.md](docs/architecture.md); planned and completed work is tracked in
+[docs/improvement_plan.md](docs/improvement_plan.md).
 
 ## License
 
-[MIT License](LICENSE)
+MIT — see [LICENSE](LICENSE).

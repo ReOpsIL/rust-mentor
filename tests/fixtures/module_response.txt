@@ -1,0 +1,45 @@
+```
+<<<explanation: Ownership in Rust>>>
+Every value in Rust has a single **owner**. When the owner goes out of scope,
+the value is dropped.
+
+```rust
+let s = String::from("hi"); // s owns the String
+```
+
+Assigning a heap value to another variable *moves* it.
+
+<<<code_snippet 1: Moving a String>>>
+// code snippet: Shows how ownership moves between variables
+```rust
+fn main() {
+    let s1 = String::from("hello");
+    let s2 = s1; // s1 is moved into s2
+    println!("{}", s2);
+}
+```
+
+<<<code_snippet 2: Borrowing: references>>>
+// code snippet: Borrow instead of moving
+```rust
+fn len(s: &String) -> usize {
+    s.len()
+}
+```
+
+<<<exercise 1: Fix the move>>>
+// exercise description: Make this program compile without cloning
+```rust
+fn main() {
+    let s = String::from("hi");
+    let t = s;
+    println!("{} {}", s, t);
+}
+```
+
+<<<exercise 2: [ Longest string ]>>>
+// exercise description: Write a function returning the longer of two string slices
+fn longest(a: &str, b: &str) -> &str {
+    todo!()
+}
+```

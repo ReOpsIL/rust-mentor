@@ -1,6 +1,7 @@
 // src/event.rs
-use anyhow::Result;
-use crossterm::event::{self, Event as CrosstermEvent, KeyEvent};
+use anyhow::{Result, anyhow};
+use crossterm::event::{Event as CrosstermEvent, EventStream, KeyEvent};
+use futures_util::StreamExt;
 use std::time::Duration;
 use tokio::sync::mpsc;
 
@@ -8,37 +9,46 @@ use tokio::sync::mpsc;
 pub enum Event {
     Tick,
     Key(KeyEvent),
+    Resize,
 }
 
+/// Merges terminal input (read asynchronously) with a periodic tick
 pub struct EventHandler {
-    sender: mpsc::Sender<Event>,
     receiver: mpsc::Receiver<Event>,
 }
 
 impl EventHandler {
-    pub fn new(tick_rate_ms: u64) -> Self {
+    pub fn new(tick_rate: Duration) -> Self {
         let (sender, receiver) = mpsc::channel(100);
-        let tick_rate = Duration::from_millis(tick_rate_ms);
-        let event_sender = sender.clone();
 
         tokio::spawn(async move {
+            let mut reader = EventStream::new();
+            let mut tick = tokio::time::interval(tick_rate);
+            tick.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
             loop {
-                if event::poll(tick_rate).unwrap_or(false) {
-                    if let Ok(CrosstermEvent::Key(key)) = event::read() {
-                        event_sender.send(Event::Key(key)).await.ok();
-                    }
+                let event = tokio::select! {
+                    _ = tick.tick() => Event::Tick,
+                    maybe_event = reader.next() => match maybe_event {
+                        Some(Ok(CrosstermEvent::Key(key))) => Event::Key(key),
+                        Some(Ok(CrosstermEvent::Resize(_, _))) => Event::Resize,
+                        Some(Ok(_)) => continue,
+                        Some(Err(err)) => {
+                            tracing::error!("Failed to read terminal input: {}", err);
+                            break;
+                        }
+                        None => break,
+                    },
+                };
+                if sender.send(event).await.is_err() {
+                    break; // The app has shut down
                 }
-                event_sender.send(Event::Tick).await.ok();
             }
         });
 
-        Self { sender, receiver }
+        Self { receiver }
     }
 
     pub async fn next(&mut self) -> Result<Event> {
-        self.receiver
-            .recv()
-            .await
-            .ok_or_else(|| anyhow::anyhow!("Event channel closed"))
+        self.receiver.recv().await.ok_or_else(|| anyhow!("Terminal input closed"))
     }
 }
