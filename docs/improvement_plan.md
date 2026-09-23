@@ -107,5 +107,8 @@ Smaller: wrong help text ("Press 'q' to generate questions"), Settings Esc alway
 - [x] Model picker in Settings (searchable OpenRouter model list, free models first)
 - [x] Session history of learning modules (`[` / `]`)
 - [x] Answering a question jumps to the next unanswered one; level can be picked with digit keys
+- [x] **Cyber** content source: a security-engineering curriculum (`data/cyber_security.json`, 8 chapters) —
+      vulnerability classes and how Rust prevents them, unsafe/low-level, cryptography, hardening, reverse
+      engineering and defensive malware analysis/detection; opt-in (kept out of the Random pool)
 - [x] Topic picker: after choosing a source (and with `t` on the learning screen), choose a topic from a
       searchable list for your level, a random topic, or a custom topic typed by the user

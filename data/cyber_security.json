@@ -1,0 +1,279 @@
+{
+  "book": {
+    "title": "Cyber: Security Engineering in Rust",
+    "url": "https://rustsec.org/",
+    "introduction": "A security-engineering curriculum for learning Rust: understanding vulnerability classes and how Rust's ownership model prevents them, low-level and unsafe programming, cryptography, hardening, and defensive analysis (reverse engineering, malware analysis, and detection). The material is oriented toward building secure systems and understanding attacks in order to defend against them.",
+    "chapters": [
+      {
+        "chapter_number": 1,
+        "title": "Memory Safety and Vulnerability Classes",
+        "sections": [
+          {
+            "section_number": "1.1",
+            "title": "How Ownership Prevents Use-After-Free",
+            "description": "Why use-after-free and double-free bugs are impossible in safe Rust, illustrated with C examples and their Rust equivalents.",
+            "min_level": 4
+          },
+          {
+            "section_number": "1.2",
+            "title": "Buffer Overflows and Bounds Checking",
+            "description": "How out-of-bounds access causes memory corruption in C, and how Rust's bounds checking and slices prevent it.",
+            "min_level": 4
+          },
+          {
+            "section_number": "1.3",
+            "title": "Integer Overflow and Wrapping Arithmetic",
+            "description": "Integer overflow as a vulnerability source; checked, wrapping, and saturating arithmetic in Rust.",
+            "min_level": 4
+          },
+          {
+            "section_number": "1.4",
+            "title": "Data Races and the Send/Sync Traits",
+            "description": "How the type system prevents data races at compile time, and what that means for concurrent security-critical code.",
+            "min_level": 7
+          },
+          {
+            "section_number": "1.5",
+            "title": "Uninitialized Memory and MaybeUninit",
+            "description": "Why reading uninitialized memory is undefined behavior, and how to work with it soundly.",
+            "min_level": 8
+          }
+        ]
+      },
+      {
+        "chapter_number": 2,
+        "title": "Low-Level and Unsafe Rust",
+        "sections": [
+          {
+            "section_number": "2.1",
+            "title": "Raw Pointers and the unsafe Keyword",
+            "description": "What unsafe actually permits, and the invariants you must uphold when dereferencing raw pointers.",
+            "min_level": 7
+          },
+          {
+            "section_number": "2.2",
+            "title": "Foreign Function Interface (FFI) with C",
+            "description": "Calling C libraries and exposing Rust to C safely; the security pitfalls at the boundary.",
+            "min_level": 7
+          },
+          {
+            "section_number": "2.3",
+            "title": "Making Raw Syscalls",
+            "description": "Invoking operating-system syscalls directly, and why higher-level wrappers are safer.",
+            "min_level": 8
+          },
+          {
+            "section_number": "2.4",
+            "title": "Memory Layout, repr(C), and Alignment",
+            "description": "Controlling struct layout for interoperability and safe parsing of binary formats.",
+            "min_level": 8
+          },
+          {
+            "section_number": "2.5",
+            "title": "Auditing unsafe Code for Soundness",
+            "description": "How to review unsafe blocks, encapsulate them behind safe APIs, and use tools like Miri.",
+            "min_level": 9
+          }
+        ]
+      },
+      {
+        "chapter_number": 3,
+        "title": "Applied Cryptography",
+        "sections": [
+          {
+            "section_number": "3.1",
+            "title": "Hashing and Message Authentication",
+            "description": "Cryptographic hashes and HMAC with the RustCrypto crates; where each is appropriate.",
+            "min_level": 5
+          },
+          {
+            "section_number": "3.2",
+            "title": "Password Storage with Argon2",
+            "description": "Salting and using memory-hard password hashing correctly.",
+            "min_level": 5
+          },
+          {
+            "section_number": "3.3",
+            "title": "Authenticated Symmetric Encryption (AEAD)",
+            "description": "Encrypting data with AES-GCM or ChaCha20-Poly1305 and handling nonces safely.",
+            "min_level": 6
+          },
+          {
+            "section_number": "3.4",
+            "title": "Public-Key Cryptography and Signatures",
+            "description": "Key exchange and digital signatures with ed25519 and x25519.",
+            "min_level": 7
+          },
+          {
+            "section_number": "3.5",
+            "title": "Constant-Time Comparison and Side Channels",
+            "description": "Why naive comparisons leak secrets by timing, and how to avoid it.",
+            "min_level": 8
+          },
+          {
+            "section_number": "3.6",
+            "title": "TLS with rustls",
+            "description": "Establishing encrypted connections and validating certificates correctly.",
+            "min_level": 7
+          }
+        ]
+      },
+      {
+        "chapter_number": 4,
+        "title": "Secure Coding and Hardening",
+        "sections": [
+          {
+            "section_number": "4.1",
+            "title": "Input Validation and Parsing Untrusted Data",
+            "description": "Parsing defensively so malformed input cannot cause panics or resource exhaustion.",
+            "min_level": 5
+          },
+          {
+            "section_number": "4.2",
+            "title": "Handling Secrets in Memory (zeroize)",
+            "description": "Keeping keys and passwords out of logs and wiping them from memory after use.",
+            "min_level": 6
+          },
+          {
+            "section_number": "4.3",
+            "title": "Avoiding Panics and Denial of Service",
+            "description": "Turning recoverable errors into Results and bounding memory and CPU use.",
+            "min_level": 6
+          },
+          {
+            "section_number": "4.4",
+            "title": "Supply-Chain Security with cargo-audit and cargo-vet",
+            "description": "Auditing dependencies for known vulnerabilities and vetting third-party crates.",
+            "min_level": 5
+          },
+          {
+            "section_number": "4.5",
+            "title": "Privilege Separation and Sandboxing",
+            "description": "Dropping privileges and confining a process with OS sandboxing primitives.",
+            "min_level": 9
+          }
+        ]
+      },
+      {
+        "chapter_number": 5,
+        "title": "Reverse Engineering and Binary Analysis",
+        "sections": [
+          {
+            "section_number": "5.1",
+            "title": "Parsing ELF and PE Executables",
+            "description": "Reading executable headers and sections with the goblin crate for static analysis.",
+            "min_level": 6
+          },
+          {
+            "section_number": "5.2",
+            "title": "Disassembly with Capstone",
+            "description": "Turning machine code back into assembly to understand a binary's behavior.",
+            "min_level": 8
+          },
+          {
+            "section_number": "5.3",
+            "title": "Building a Hex Dump and Binary Inspector",
+            "description": "A command-line tool for examining raw file contents and extracting strings.",
+            "min_level": 5
+          },
+          {
+            "section_number": "5.4",
+            "title": "Extracting Indicators of Compromise from Files",
+            "description": "Scanning binaries for URLs, IPs, and known signatures to support triage.",
+            "min_level": 6
+          }
+        ]
+      },
+      {
+        "chapter_number": 6,
+        "title": "Malware Analysis and Detection (Defensive)",
+        "sections": [
+          {
+            "section_number": "6.1",
+            "title": "Signature Scanning with YARA Rules",
+            "description": "Matching files against detection rules to classify known malware families.",
+            "min_level": 6
+          },
+          {
+            "section_number": "6.2",
+            "title": "File Hashing and Reputation Lookups",
+            "description": "Computing sample hashes and checking them against threat-intelligence feeds.",
+            "min_level": 5
+          },
+          {
+            "section_number": "6.3",
+            "title": "Entropy Analysis to Detect Packing",
+            "description": "Measuring byte entropy to flag encrypted or packed sections in a binary.",
+            "min_level": 7
+          },
+          {
+            "section_number": "6.4",
+            "title": "Building a File-Integrity Monitor",
+            "description": "Watching the filesystem and alerting on unexpected changes to critical files.",
+            "min_level": 6
+          },
+          {
+            "section_number": "6.5",
+            "title": "Log Parsing and Anomaly Detection",
+            "description": "Ingesting system logs and flagging suspicious patterns for a SOC workflow.",
+            "min_level": 6
+          }
+        ]
+      },
+      {
+        "chapter_number": 7,
+        "title": "Network Security",
+        "sections": [
+          {
+            "section_number": "7.1",
+            "title": "Parsing Network Packets",
+            "description": "Decoding Ethernet, IP, and TCP/UDP headers from captured traffic.",
+            "min_level": 6
+          },
+          {
+            "section_number": "7.2",
+            "title": "Building a TCP Port Scanner",
+            "description": "Asynchronously probing open ports to inventory a host you are authorized to test.",
+            "min_level": 6
+          },
+          {
+            "section_number": "7.3",
+            "title": "A Simple Intrusion-Detection Sensor",
+            "description": "Matching traffic against rules and raising alerts on suspicious flows.",
+            "min_level": 8
+          },
+          {
+            "section_number": "7.4",
+            "title": "Rate Limiting and Abuse Prevention",
+            "description": "Protecting a network service from floods and brute-force attempts.",
+            "min_level": 6
+          }
+        ]
+      },
+      {
+        "chapter_number": 8,
+        "title": "Authentication and Access Control",
+        "sections": [
+          {
+            "section_number": "8.1",
+            "title": "Session Tokens and JWTs",
+            "description": "Issuing and verifying signed tokens without introducing common flaws.",
+            "min_level": 6
+          },
+          {
+            "section_number": "8.2",
+            "title": "Time-Based One-Time Passwords (TOTP)",
+            "description": "Implementing a standards-compliant second factor.",
+            "min_level": 6
+          },
+          {
+            "section_number": "8.3",
+            "title": "Role-Based Access Control",
+            "description": "Modeling permissions in the type system so unauthorized actions do not compile.",
+            "min_level": 7
+          }
+        ]
+      }
+    ]
+  }
+}

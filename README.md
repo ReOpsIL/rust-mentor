@@ -10,8 +10,10 @@ It uses [OpenRouter](https://openrouter.ai), so any model available there can be
 ## Features
 
 - **10 skill levels**, from absolute beginner to expert
-- **Content sources**: Rust library topics, *Rust By Example*, *The Rust Programming Language*, or all of them —
-  choose a topic from a searchable list filtered to your level, let RustMentor pick one at random, or type your own
+- **Content sources**: Rust library topics, *Rust By Example*, *The Rust Programming Language*, a **Cyber**
+  security-engineering track (memory safety, cryptography, hardening, reverse engineering and defensive malware
+  analysis), or a random mix of the general Rust sources — choose a topic from a searchable list filtered to your
+  level, let RustMentor pick one at random, or type your own
 - **Questions → application → learning module** flow, with streaming output and a live preview while generating
 - **Learning modules** with Markdown explanations, syntax-highlighted examples, exercises with starter code and
   links to documentation, forums, crates.io and GitHub

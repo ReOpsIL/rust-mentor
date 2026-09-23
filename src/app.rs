@@ -50,14 +50,16 @@ pub enum IndexType {
     RustLibrary,
     RustByExample,
     RustProgrammingLanguage,
+    Cyber,
     Random,
 }
 
-pub const INDEX_OPTIONS: [(IndexType, &str); 4] = [
+pub const INDEX_OPTIONS: [(IndexType, &str); 5] = [
     (IndexType::RustLibrary, "Rust Library Index (libraries like tokio, serde, etc.)"),
     (IndexType::RustByExample, "Rust By Example Index (examples from Rust By Example)"),
     (IndexType::RustProgrammingLanguage, "Rust Programming Language Index (topics from The Book)"),
-    (IndexType::Random, "Random (select randomly from available indexes)"),
+    (IndexType::Cyber, "Cyber (security engineering: memory safety, crypto, analysis & hardening)"),
+    (IndexType::Random, "Random (select randomly from the general Rust indexes)"),
 ];
 
 /// Results of background tasks, delivered to the main loop over a single channel.

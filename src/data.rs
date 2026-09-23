@@ -8,6 +8,7 @@ use serde::{Deserialize, Serialize};
 const RUST_LIBRARY_INDEX: &str = include_str!("../data/rust_library_index.json");
 const RUST_BY_EXAMPLE_INDEX: &str = include_str!("../data/rust_by_example_index_full.json");
 const RUST_PROGRAMMING_LANGUAGE_INDEX: &str = include_str!("../data/the_rust_programming_language.json");
+const CYBER_SECURITY_INDEX: &str = include_str!("../data/cyber_security.json");
 
 // Structs for rust_by_example_index.json
 #[derive(Debug, Deserialize, Serialize, Clone, PartialEq)]
@@ -110,6 +111,12 @@ pub fn load_rust_programming_language() -> Result<RustProgrammingLanguage> {
     Ok(rust_book)
 }
 
+// Function to load the Cyber security-engineering curriculum (same schema as Rust By Example)
+pub fn load_cyber_security() -> Result<RustByExampleFull> {
+    let cyber: RustByExampleFull = serde_json::from_str(CYBER_SECURITY_INDEX)?;
+    Ok(cyber)
+}
+
 /// Book sections at or below `level`, as topics
 fn book_topics(chapters: &[Chapter], level: u8, source_prefix: &str) -> Vec<Topic> {
     chapters
@@ -141,6 +148,7 @@ pub fn topics_for_level(level: u8, index_type: &IndexType) -> Result<Vec<Topic>>
         IndexType::RustProgrammingLanguage => {
             book_topics(&load_rust_programming_language()?.book.chapters, level, "The Book Ch")
         }
+        IndexType::Cyber => book_topics(&load_cyber_security()?.book.chapters, level, "Cyber"),
         IndexType::Random => {
             let mut topics = Vec::new();
             for index_type in CONCRETE_INDEXES {
@@ -196,6 +204,18 @@ mod tests {
             assert!(get_random_topic_for_level(1, &IndexType::Random).is_ok());
         }
         assert!(get_random_topic_for_level(1, &IndexType::RustLibrary).is_err());
+    }
+
+    #[test]
+    fn cyber_index_parses_and_respects_level() {
+        let all = topics_for_level(10, &IndexType::Cyber).unwrap();
+        assert!(all.len() > 20);
+        let beginner = topics_for_level(4, &IndexType::Cyber).unwrap();
+        assert!(beginner.iter().all(|t| t.min_level <= 4));
+        assert!(beginner.len() < all.len());
+        // Cyber is opt-in: it must not leak into the general Random pool
+        let random = topics_for_level(10, &IndexType::Random).unwrap();
+        assert!(!random.iter().any(|t| t.source.starts_with("Cyber")));
     }
 
     #[test]
