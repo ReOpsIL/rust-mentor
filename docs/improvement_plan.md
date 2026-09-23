@@ -107,6 +107,11 @@ Smaller: wrong help text ("Press 'q' to generate questions"), Settings Esc alway
 - [x] Model picker in Settings (searchable OpenRouter model list, free models first)
 - [x] Session history of learning modules (`[` / `]`)
 - [x] Answering a question jumps to the next unanswered one; level can be picked with digit keys
+- [x] Library index cleaned up (175 → 158 crates): removed the `flate2` duplicates, deprecated or unmaintained
+      crates (`structopt`, `lazy_static`, `rusoto`, `tokio-timer`, `cbor`, `serde_cbor`, `instant`, `plotlib`,
+      `vec_map`, `block-modes`), internal support crates and misdescribed entries; added widely used crates
+      (`ratatui`, `crossterm`, `strum`, `tracing-subscriber`, `insta`, `criterion`, `proptest`, `polars`, `egui`,
+      `tauri`, `wasm-bindgen`, `aws-sdk-s3`, and others); a test keeps the index free of duplicates
 - [x] **Cyber** content source: a security-engineering curriculum (`data/cyber_security.json`, 8 chapters) —
       vulnerability classes and how Rust prevents them, unsafe/low-level, cryptography, hardening, reverse
       engineering and defensive malware analysis/detection; opt-in (kept out of the Random pool)

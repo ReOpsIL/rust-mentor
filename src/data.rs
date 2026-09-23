@@ -207,6 +207,23 @@ mod tests {
     }
 
     #[test]
+    fn library_index_is_consistent() {
+        let library = load_rust_library_index().unwrap();
+        let mut names = std::collections::HashSet::new();
+        for entry in &library {
+            assert!(names.insert(entry.library_name.as_str()), "duplicate entry: {}", entry.library_name);
+            assert!((1..=10).contains(&entry.programmer_level), "{}", entry.library_name);
+            assert_eq!(
+                entry.programmer_level_description,
+                crate::prompts::level_description(entry.programmer_level),
+                "{}",
+                entry.library_name
+            );
+            assert!(!entry.description.trim().is_empty(), "{}", entry.library_name);
+        }
+    }
+
+    #[test]
     fn cyber_index_parses_and_respects_level() {
         let all = topics_for_level(10, &IndexType::Cyber).unwrap();
         assert!(all.len() > 20);
